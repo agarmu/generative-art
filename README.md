@@ -1,6 +1,6 @@
-# processing-scala
+# generative-art
 
-Minimal Processing 4 + Scala 3 setup for generative art, managed with Nix flakes.
+Generative art by me.
 
 ## Quickstart
 
