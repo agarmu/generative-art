@@ -29,19 +29,27 @@
             mkdir -p $out
             cp "''${jars[@]}" $out/
           '';
+          minimalPackages = with pkgs; [
+            jdk
+            processingJars
+            (pkgs.scala.override { jre = jdk; })
+            (pkgs.sbt.override { jre = jdk; })
+          ];
         in
         {
           default = pkgs.mkShell {
-            packages = [
-              jdk
-              processingJars
-              (pkgs.sbt.override { jre = jdk; })
-              (pkgs.scala.override { jre = jdk; })
+            packages = minimalPackages ++ [
               (pkgs.metals.override { jre = jdk; })
               (pkgs.scalafmt.override { jre = jdk; })
-	      pkgs.scalafmt 
             ];
 
+            shellHook = ''
+              export PROCESSING_LIB_DIR="${processingJars}"
+            '';
+          };
+
+          minimal = pkgs.mkShell {
+            packages = minimalPackages;
             shellHook = ''
               export PROCESSING_LIB_DIR="${processingJars}"
             '';
