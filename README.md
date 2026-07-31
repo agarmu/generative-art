@@ -9,7 +9,7 @@ nix develop
 sbt run
 ```
 
-`nix develop` sets `PROCESSING_LIB_DIR` (required by `build.sbt`). `sbt run` compiles and opens the sketch fullscreen.
+`nix develop` imports dependencies and sets `PROCESSING_LIB_DIR` (required by `build.sbt`). `sbt run` compiles and opens the sketch.
 
 ## Environment
 
