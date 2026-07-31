@@ -5,11 +5,11 @@ Generative art by me.
 ## Quickstart
 
 ```sh
-nix develop
+nix-shell
 sbt run
 ```
 
-`nix develop` imports dependencies and sets `PROCESSING_LIB_DIR` (required by `build.sbt`). `sbt run` compiles and opens the sketch.
+`nix-shell` imports dependencies and sets `PROCESSING_LIB_DIR` (required by `build.sbt`). `sbt run` compiles and opens the sketch.
 
 ## Environment
 
