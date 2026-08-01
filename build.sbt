@@ -25,3 +25,6 @@ run / javaOptions ++= Seq(
   s"-Djava.library.path=$processingLibDir",
   s"-Djna.library.path=$processingLibDir"
 )
+
+
+libraryDependencies += "org.scalameta" %% "munit" % "1.3.6" % Test
