@@ -12,9 +12,11 @@ val processingLibDir = file(
 Compile / unmanagedBase := {
   val hasProcessingJars =
     Option(processingLibDir.listFiles())
-      .exists(_.exists(_.getName.endsWith(".jar")))
+      .exists(_.exists(entry => entry.isFile && entry.getName.endsWith(".jar")))
   if (!processingLibDir.isDirectory || !hasProcessingJars)
-    sys.error(s"No Processing jars found in PROCESSING_LIB_DIR=$processingLibDir")
+    sys.error(
+      s"No Processing jars found in PROCESSING_LIB_DIR=$processingLibDir"
+    )
   processingLibDir
 }
 
