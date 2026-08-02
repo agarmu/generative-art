@@ -256,6 +256,8 @@ private[genart] class TestProvider extends SketchProvider:
   val canvas: Canvas = new Canvas:
     def width: Int = dimensions._1
     def height: Int = dimensions._2
+    def snapshot(): Image =
+      throw new UnsupportedOperationException("test canvas has no renderer")
     protected def setStrokeColor(color: Color): Unit = ()
     protected def setFillColor(color: Color): Unit = ()
     protected def disableStroke(): Unit = ()

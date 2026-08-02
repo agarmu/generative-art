@@ -75,6 +75,7 @@ class CanvasSuite extends munit.FunSuite:
   private class RecordingCanvas extends Canvas:
     val width = 640
     val height = 480
+    def snapshot(): Image = fail("recording canvas has no renderer")
     var state = State()
     var restoreFailure = Option.empty[Throwable]
     val lines = ArrayBuffer.empty[(Vector[Double], State)]

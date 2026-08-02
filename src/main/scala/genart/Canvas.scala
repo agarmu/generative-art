@@ -7,6 +7,7 @@ import scala.util.Using
 trait Canvas:
   def width: Int
   def height: Int
+  def snapshot(): Image
 
   final def stroke(color: Color): Unit = setStrokeColor(color)
   final def fill(color: Color): Unit = setFillColor(color)
