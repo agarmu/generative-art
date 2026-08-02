@@ -2,6 +2,9 @@ package genart
 
 import genart.lib.math.Vec
 
+final case class Step(index: Long, seconds: Double, deltaSeconds: Double)
+final case class Frame(index: Long, deltaSeconds: Double, interpolation: Double)
+
 trait Sketch:
   def setup(): Unit = ()
   def draw(): Unit
