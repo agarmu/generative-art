@@ -70,8 +70,9 @@ lazy val root = project
   .settings(processingSettings)
   .settings(
     name := "genart-desktop",
-    Compile / unmanagedSources := Seq(
-      baseDirectory.value / "src/main/scala/Sketch.scala"
-    ),
+    Compile / unmanagedSources := {
+      val directory = baseDirectory.value / "src/main/scala"
+      ((directory ** "*.scala") --- (directory / "genart" ** "*.scala")).get()
+    },
     Test / unmanagedSources := Seq.empty
   )
