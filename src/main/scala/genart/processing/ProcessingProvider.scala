@@ -1,10 +1,38 @@
 package genart.processing
 
-import genart.{Canvas, Color, Image, SketchProvider}
+import genart.{
+  Canvas,
+  Color,
+  Image,
+  Sketch,
+  SketchContext,
+  SketchHandle,
+  SketchProvider
+}
+import genart.lib.runtime.RunConfig
 import processing.awt.PGraphicsJava2D
 import processing.core.{PApplet, PConstants, PGraphics}
 import java.awt.{Component, EventQueue}
 import javax.swing.SwingUtilities
+
+object ProcessingProvider:
+  final case class Window(
+      title: String = "genart",
+      size: Option[(Int, Int)] = None,
+      resizable: Boolean = true
+  ):
+    require(title.nonEmpty, "window title must not be empty")
+    size.foreach { case (width, height) =>
+      require(width > 0 && height > 0, "dimensions must be positive")
+    }
+
+  def run(config: RunConfig = RunConfig(), window: Window = Window())(
+      create: SketchContext => Sketch
+  ): SketchHandle =
+    val host = new ProcessingHost(config, create, window)
+    PApplet.runSketch(Array("genart"), host)
+    new SketchHandle:
+      def stop(): Unit = host.requestStop()
 
 final class ProcessingProvider(applet: PApplet) extends SketchProvider:
   private var closed = false
@@ -125,6 +153,7 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
       val surface = applet.getSurface
       if surface != null then
         applet.noLoop()
+        surface.setFrameRate(60.0f)
         try applet.dispose()
         finally
           surface.getNative match

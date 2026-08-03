@@ -26,8 +26,8 @@ lazy val processingSettings = Seq(
     implicit val converter: xsbti.FileConverter = fileConverter.value
     (processingLibDir * "*.jar").classpath
   },
-  run / fork := true,
-  run / javaOptions ++= Seq(
+  Compile / fork := true,
+  Compile / javaOptions ++= Seq(
     s"-Djava.library.path=$processingLibDir",
     s"-Djna.library.path=$processingLibDir"
   )

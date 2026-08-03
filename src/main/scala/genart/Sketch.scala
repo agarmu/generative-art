@@ -12,3 +12,6 @@ trait Sketch:
   def draw(frame: Frame): Unit
   def resized(): Unit = ()
   def dispose(): Unit = ()
+
+trait SketchHandle:
+  def stop(): Unit
