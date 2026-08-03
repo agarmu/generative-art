@@ -7,7 +7,7 @@ import genart.lib.time.{ClockAdvance, ClockConfig, FixedClock}
 import scala.util.Using
 
 final case class RunConfig(
-    seed: Seed,
+    seed: Seed = Seed.fromLong(scala.util.Random.nextLong()),
     clock: ClockConfig = ClockConfig(),
     frameRate: Double = 60.0
 ):

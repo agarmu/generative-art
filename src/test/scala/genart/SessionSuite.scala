@@ -1,6 +1,6 @@
 package genart
 
-import genart.lib.random.Seed
+import genart.lib.random.{Rng, Seed}
 import genart.lib.runtime.{RunConfig, SketchSession}
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Try
@@ -16,6 +16,33 @@ class SessionSuite extends munit.FunSuite:
       Vector("initialize", "construct", "setup")
     )
     session.stop()
+  }
+
+  test("an automatically generated seed can reproduce a session's randomness") {
+    def samples(config: RunConfig): Vector[Long] =
+      val values = ArrayBuffer.empty[Long]
+      val session = SketchSession.start(new TestProvider, config) { context =>
+        assertEquals(context.seed, config.seed)
+        new Sketch:
+          private var rng = Rng(context.seed)
+          override def update(step: Step): Unit =
+            val (value, next) = rng.nextLong
+            values += value
+            rng = next
+          def draw(frame: Frame): Unit = ()
+      }
+      try
+        session.replay(10)
+        values.toVector
+      finally session.stop()
+
+    val automatic = RunConfig()
+    val original = samples(automatic)
+    assertEquals(original.size, 10)
+    assertEquals(
+      samples(RunConfig(Seed.fromHex(automatic.seed.toHex))),
+      original
+    )
   }
 
   test("a provider cannot be claimed by a second session") {
