@@ -1,23 +1,15 @@
 package examples
 
-import genart.{Sketch, SketchContext}
 import genart.processing.ProcessingProvider
 
 object ProcessingExampleRunner:
   def main(args: Array[String]): Unit =
-    val examples: Map[String, SketchContext => Sketch] = Map(
-      "Square" -> Square
-    )
-    val availableExamples = examples.keys.toVector.sorted.mkString(", ")
+    val availableExamples = Examples.names.mkString(", ")
     val selected = for
       name <- args match
         case Array(name) => Right(name)
         case _           => Left("Usage: ProcessingExampleRunner <example>")
-      create <- examples
-        .get(name)
-        .toRight(
-          s"Unknown example '$name'"
-        )
+      create <- Examples.select(name)
     yield (name, create)
 
     selected.fold[Unit](
