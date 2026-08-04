@@ -24,6 +24,9 @@ object ProcessingExampleRunner:
       error => Console.err.println(error + s". Available: ${availableExamples}"),
       (name, create) =>
         ProcessingProvider.run(
-          window = ProcessingProvider.Window(title = name)
+          window = ProcessingProvider.Window(
+            title = name,
+            size = Some((960, 720))
+          )
         )(create)
     )
