@@ -15,3 +15,4 @@ trait Sketch:
 
 trait SketchHandle:
   def stop(): Unit
+  def isStopped: Boolean

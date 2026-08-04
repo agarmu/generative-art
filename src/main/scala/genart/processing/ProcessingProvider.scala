@@ -33,6 +33,7 @@ object ProcessingProvider:
     PApplet.runSketch(Array("genart"), host)
     new SketchHandle:
       def stop(): Unit = host.requestStop()
+      def isStopped: Boolean = host.isStopped
 
 final class ProcessingProvider(applet: PApplet) extends SketchProvider:
   private var closed = false

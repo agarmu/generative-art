@@ -23,6 +23,8 @@ private final class ProcessingHost(
     stopRequested.set(true)
     wakeOnStop()
 
+  def isStopped: Boolean = stopRequested.get()
+
   private def wakeOnStop(): Unit = callbackLock.synchronized {
     if stopRequested.get() && !waking then
       animationThread.foreach { target =>
