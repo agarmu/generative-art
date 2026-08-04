@@ -13,6 +13,12 @@ final case class Rng private (private val state: Long):
     val (bits, next) = nextLong
     ((bits >>> 11).toDouble / 9007199254740992.0, next)
 
+  def nextGaussian: (Double, Rng) =
+    val (u, next) = nextDouble
+    val (v, remaining) = next.nextDouble
+    val value = math.sqrt(-2.0 * math.log1p(-u)) * math.cos(2.0 * math.Pi * v)
+    (value, remaining)
+
   def uniform(low: Double, high: Double): (Double, Rng) =
     requireFinite(low, "low")
     requireFinite(high, "high")

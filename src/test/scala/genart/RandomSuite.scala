@@ -134,6 +134,49 @@ class RandomSuite extends munit.FunSuite:
 
   }
 
+  test("Check implementation of NextGaussian") {
+    val values = Iterator
+      .unfold(Rng(Seed.fromLong(42L)))(rng => Some(rng.nextGaussian))
+      .take(50000)
+      .toVector
+    // check finiteness
+    assert(values.forall(_.isFinite))
+    // E[X] = 0 + eps
+    val mean = values.sum / values.size
+    assertEqualsDouble(mean, 0.0, 0.03)
+    // Var[X] = 1 + eps
+    /* we do avg (X - mu)^2 instead of
+      (avg X^2) - mu^2 so as to have some
+      numerical stability..
+    */
+    val variance = values
+      .map(x => x - mean)
+      .map(x => x * x)
+    .sum / values.size
+    assertEqualsDouble(variance, 1.0, 0.05)
+    // check tail according to what we expect for std normal
+    val thresholds = Vector(
+      (1.0, 0.158655254),
+      (2.0, 0.022750132),
+      (3.0, 0.001349898)
+    ).flatMap { case (threshold, expected) =>
+      Vector((threshold, expected), (-threshold, 1.0 - expected))
+    }
+    val counts = values.iterator
+      .map { value =>
+        thresholds.map { case (threshold, _) =>
+          if value > threshold then 1 else 0
+        }
+      }
+      .foldLeft(Vector.fill(thresholds.size)(0)) { (acc, counts) =>
+        acc.lazyZip(counts).map(_ + _)
+      }
+    for ((threshold, expected), count) <- thresholds.zip(counts) do
+      val tolerance = 5.0 * math.sqrt(expected * (1.0 - expected) / values.size)
+      val actual = count.toDouble / values.size
+      assertEqualsDouble(actual, expected, tolerance, s"tail above $threshold")
+  }
+
   test("bounded integer rejection consumes another draw") {
     val rejectionSeed = Seed.fromHex("31628af67b2131ab")
     val rejectionRng = Rng(rejectionSeed)
