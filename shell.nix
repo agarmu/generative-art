@@ -40,6 +40,7 @@ let
   '';
   minimalPackages = with pkgs; [
     jdk
+    bun
     processingJars
     (pkgs.scala.override { jre = jdk; })
     (pkgs.sbt.override { jre = jdk; })

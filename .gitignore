@@ -1,10 +1,12 @@
 target/
+node_modules/
 .bsp/
 .metals/
 .scala-build/
 project/target/
 project/project/
-project/
+project/*
+!project/plugins.sbt
 pictures/
 /.direnv
 /.bloop

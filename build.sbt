@@ -1,3 +1,5 @@
+import org.scalajs.jsenv.nodejs.NodeJSEnv
+
 ThisBuild / version := "0.1"
 ThisBuild / scalaVersion := "3.3.6"
 
@@ -33,46 +35,90 @@ lazy val processingSettings = Seq(
   )
 )
 
-def portableSources(directory: File): Seq[File] =
-  ((directory ** "*.scala") --- (directory / "processing" ** "*.scala")).get()
+def sourceSettings(path: String, excluded: String*) =
+  Seq(Compile -> "main", Test -> "test").flatMap { case (config, scope) =>
+    inConfig(config)(
+      Seq(
+        unmanagedSourceDirectories := Seq(
+          (LocalRootProject / baseDirectory).value / "src" / scope / "scala" / path
+        ),
+        unmanagedSources := unmanagedSourceDirectories.value.flatMap { root =>
+          excluded
+            .foldLeft(root ** "*.scala") { (sources, path) =>
+              sources --- (root / path).allPaths
+            }
+            .get()
+        }
+      )
+    )
+  }
+
+lazy val portableSettings =
+  sourceSettings("genart", "processing", "p5") ++ testSettings
+
+lazy val bunSettings = Seq(
+  Test / fork := false,
+  scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.ESModule)),
+  Test / scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),
+  jsEnv := Def.uncached {
+    new NodeJSEnv(
+      NodeJSEnv
+        .Config()
+        .withExecutable("bun")
+        .withArgs(List("run", "--no-install", "-"))
+    )
+  }
+)
 
 lazy val genart = project
   .in(file("target/projects/genart"))
-  .settings(testSettings)
-  .settings(
-    Compile / unmanagedSources := portableSources(
-      (LocalRootProject / baseDirectory).value / "src/main/scala/genart"
-    ),
-    Test / unmanagedSources := portableSources(
-      (LocalRootProject / baseDirectory).value / "src/test/scala/genart"
-    )
-  )
+  .settings(portableSettings)
 
 lazy val coreJVM = project
   .in(file("target/projects/coreJVM"))
   .dependsOn(genart)
-  .settings(processingSettings)
-  .settings(testSettings)
   .settings(
-    Compile / unmanagedSourceDirectories := Seq(
-      (LocalRootProject / baseDirectory).value / "src/main/scala/genart/processing"
-    ),
-    Test / unmanagedSourceDirectories := Seq(
-      (LocalRootProject / baseDirectory).value / "src/test/scala/genart/processing"
-    ),
+    sourceSettings("genart/processing"),
+    testSettings,
+    processingSettings,
     Test / javaOptions += "-Djava.awt.headless=true"
+  )
+
+lazy val genartJS = project
+  .in(file("target/projects/genartJS"))
+  .enablePlugins(ScalaJSPlugin)
+  .settings(portableSettings, bunSettings)
+
+lazy val coreJS = project
+  .in(file("target/projects/coreJS"))
+  .enablePlugins(ScalaJSPlugin)
+  .dependsOn(genartJS)
+  .settings(
+    sourceSettings("genart/p5"),
+    bunSettings,
+    libraryDependencies += "org.scala-js" %% "scalajs-dom" % "2.8.1"
+  )
+
+lazy val browserExamples = project
+  .in(file("target/projects/browserExamples"))
+  .enablePlugins(ScalaJSPlugin)
+  .dependsOn(coreJS)
+  .settings(
+    sourceSettings("examples", "ProcessingExampleRunner.scala"),
+    bunSettings,
+    publish / skip := true,
+    Test / unmanagedSourceDirectories := Seq.empty,
+    Compile / fastLinkJS / scalaJSLinkerOutputDirectory :=
+      (LocalRootProject / baseDirectory).value / "target/browser"
   )
 
 lazy val root = project
   .in(file("."))
-  .aggregate(genart, coreJVM)
+  .aggregate(genart, coreJVM, genartJS, coreJS)
   .dependsOn(coreJVM)
-  .settings(processingSettings)
   .settings(
+    sourceSettings("examples", "BrowserExampleRunner.scala"),
+    processingSettings,
     name := "genart-desktop",
-    Compile / unmanagedSources := {
-      val directory = baseDirectory.value / "src/main/scala"
-      ((directory ** "*.scala") --- (directory / "genart" ** "*.scala")).get()
-    },
-    Test / unmanagedSources := Seq.empty
+    Test / unmanagedSourceDirectories := Seq.empty
   )
