@@ -5,7 +5,7 @@ import genart.lib.random.Rng
 
 final class Square(context: SketchContext) extends Sketch:
   private val canvas = context.canvas
-  private val background = Color.rgb(0.96, 0.94, 0.90)
+  private val background = Color.rgb(1,1,1)
   private var rng = Rng(context.seed)
   private var hue = 0.0
   private val hueVariation = 12.0
