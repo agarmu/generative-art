@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Genart examples</title>
+    <style>
+      body {
+        box-sizing: border-box;
+        height: 100dvh;
+        margin: 0;
+        padding: 24px;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 12px;
+        background: white;
+        font-family: system-ui, sans-serif;
+      }
+      .toolbar { display: flex; justify-content: center; align-items: center; gap: 12px; }
+      select, button { font: inherit; padding: 4px 8px; }
+      #stage { display: flex; justify-content: center; align-items: flex-start; min-width: 0; min-height: 0; }
+      #sketch {
+        position: relative;
+        width: 480px;
+        height: 360px;
+        max-width: 100%;
+        max-height: 100%;
+        min-width: 100px;
+        min-height: 100px;
+        overflow: hidden;
+      }
+      #resize {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        z-index: 1;
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        border: 0;
+        background: repeating-linear-gradient(135deg, transparent 0 3px, #888 3px 4px);
+        clip-path: polygon(100% 0, 100% 100%, 0 100%);
+        cursor: nwse-resize;
+        touch-action: none;
+      }
+      #sketch:not(:has(canvas)) #resize { display: none; }
+      canvas { display: block; }
+    </style>
+    <script type="module" src="./index.js"></script>
+  </head>
+  <body>
+    <div class="toolbar">
+      <label for="example">Example</label>
+      <select id="example"></select>
+      <button id="toggle" type="button">Run</button>
+      <button id="restart" type="button">Restart</button>
+    </div>
+    <main id="stage">
+      <div id="sketch">
+        <button id="resize" type="button" aria-label="Resize canvas"></button>
+      </div>
+    </main>
+  </body>
+</html>
