@@ -1,6 +1,7 @@
 package genart.processing
 
 import genart.{Color, Frame, Sketch, Step}
+import genart.lib.math.Vec
 import genart.lib.random.Seed
 import genart.lib.runtime.{RunConfig, SketchSession}
 import processing.awt.PGraphicsJava2D
@@ -53,6 +54,31 @@ class ProcessingSuite extends munit.FunSuite:
       provider.canvas.fill(red)
       provider.canvas.rect(0.0, 0.0, 8.0, 8.0)
       assertEquals(provider.canvas.snapshot()(6, 6), red)
+  }
+
+  rendering.test(
+    "ellipses use center coordinates and circles use diameter"
+  ) { case (applet, provider) =>
+    applet.g.ellipseMode(PConstants.CORNER)
+    provider.initialize(60.0)
+    val canvas = provider.canvas
+    canvas.background(black)
+    canvas.noStroke()
+    canvas.fill(red)
+    canvas.ellipse(Vec(16.0, 16.0), Vec(24.0, 12.0))
+    canvas.fill(green)
+    canvas.circle(Vec(46.0, 16.0), 16.0)
+    val image = canvas.snapshot()
+    assertEquals(image(16, 16), red)
+    assertEquals(image(8, 16), red)
+    assertEquals(image(16, 12), red)
+    assertEquals(image(16, 8), black)
+    assertEquals(image(25, 21), black)
+    assertEquals(image(46, 16), green)
+    assertEquals(image(52, 16), green)
+    assertEquals(image(46, 22), green)
+    assertEquals(image(55, 16), black)
+    assertEquals(image(46, 25), black)
   }
 
   rendering.test(
@@ -151,6 +177,9 @@ class ProcessingSuite extends munit.FunSuite:
     provider.initialize(60.0)
     intercept[IllegalArgumentException] {
       provider.canvas.translate(Double.MaxValue, 0.0)
+    }
+    intercept[IllegalArgumentException] {
+      provider.canvas.ellipse(0.0, 0.0, Double.MaxValue, 1.0)
     }
     intercept[IllegalArgumentException] {
       provider.initialize(Double.MinPositiveValue)

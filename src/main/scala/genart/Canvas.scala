@@ -39,6 +39,31 @@ trait Canvas:
     )
     drawRect(x, y, width, height)
 
+  final def ellipse(
+      centerX: Double,
+      centerY: Double,
+      width: Double,
+      height: Double
+  ): Unit =
+    requireFinite(centerX, "centerX")
+    requireFinite(centerY, "centerY")
+    requireFinite(width, "width")
+    requireFinite(height, "height")
+    require(
+      width >= 0.0 && height >= 0.0,
+      "ellipse dimensions must be nonnegative"
+    )
+    drawEllipse(centerX, centerY, width, height)
+
+  final def ellipse(center: Vec[2], size: Vec[2]): Unit =
+    ellipse(center.x, center.y, size.x, size.y)
+
+  final def circle(centerX: Double, centerY: Double, diameter: Double): Unit =
+    ellipse(centerX, centerY, diameter, diameter)
+
+  final def circle(center: Vec[2], diameter: Double): Unit =
+    circle(center.x, center.y, diameter)
+
   final def line(x1: Double, y1: Double, x2: Double, y2: Double): Unit =
     requireFinite(x1, "x1")
     requireFinite(y1, "y1")
@@ -82,6 +107,12 @@ trait Canvas:
       height: Double
   ): Unit
   protected def drawLine(x1: Double, y1: Double, x2: Double, y2: Double): Unit
+  protected def drawEllipse(
+      centerX: Double,
+      centerY: Double,
+      width: Double,
+      height: Double
+  ): Unit
   protected def translateBy(x: Double, y: Double): Unit
   protected def rotateBy(radians: Double): Unit
   protected def scaleBy(x: Double, y: Double): Unit

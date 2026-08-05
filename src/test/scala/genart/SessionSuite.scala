@@ -297,6 +297,12 @@ private[genart] class TestProvider extends SketchProvider:
         width: Double,
         height: Double
     ): Unit = ()
+    protected def drawEllipse(
+        centerX: Double,
+        centerY: Double,
+        width: Double,
+        height: Double
+    ): Unit = ()
     protected def drawLine(
         x1: Double,
         y1: Double,

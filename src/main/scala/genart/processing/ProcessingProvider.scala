@@ -101,6 +101,19 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
         y2: Double
     ): Unit = graphics.line(native(x1), native(y1), native(x2), native(y2))
 
+    protected def drawEllipse(
+        centerX: Double,
+        centerY: Double,
+        width: Double,
+        height: Double
+    ): Unit =
+      graphics.ellipse(
+        native(centerX),
+        native(centerY),
+        native(width),
+        native(height)
+      )
+
     protected def translateBy(x: Double, y: Double): Unit =
       graphics.translate(native(x), native(y))
 
@@ -129,6 +142,7 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
     graphics.colorMode(PConstants.RGB, 1.0f)
     graphics.blendMode(PConstants.BLEND)
     graphics.rectMode(PConstants.CORNER)
+    graphics.ellipseMode(PConstants.CENTER)
     graphics.stroke(0.0f, 0.0f, 0.0f, 1.0f)
     graphics.fill(1.0f, 1.0f, 1.0f, 1.0f)
     graphics.strokeWeight(1.0f)

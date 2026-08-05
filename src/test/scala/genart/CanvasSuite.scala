@@ -57,6 +57,11 @@ class CanvasSuite extends munit.FunSuite:
       assertRejected(canvas.strokeWeight(invalid))
     assertRejected(canvas.background(red.withAlpha(0.5)))
     assertRejected(canvas.rect(0.0, 0.0, -1.0, 5.0))
+    assertRejected(canvas.ellipse(0.0, 0.0, -1.0, 5.0))
+    assertRejected(canvas.ellipse(Vec(0.0, Double.NaN), Vec(1.0, 2.0)))
+    assertRejected(canvas.ellipse(0.0, 0.0, 1.0, Double.PositiveInfinity))
+    assertRejected(canvas.circle(0.0, 0.0, -1.0))
+    assertRejected(canvas.circle(Vec(0.0, 0.0), Double.NaN))
     assertRejected(canvas.line(0.0, Double.NaN, 1.0, 1.0))
     assertRejected(canvas.rotate(Double.PositiveInfinity))
     assert(canvas.state == initial && canvas.lines.isEmpty)
@@ -95,6 +100,12 @@ class CanvasSuite extends munit.FunSuite:
         width: Double,
         height: Double
     ): Unit = ()
+    protected def drawEllipse(
+        centerX: Double,
+        centerY: Double,
+        width: Double,
+        height: Double
+    ): Unit = fail("invalid ellipse reached the renderer")
     protected def drawLine(
         x1: Double,
         y1: Double,

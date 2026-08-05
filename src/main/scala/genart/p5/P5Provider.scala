@@ -92,6 +92,13 @@ final class P5Provider private[p5] (
         y2: Double
     ): Unit = instance.line(x1, y1, x2, y2)
 
+    protected def drawEllipse(
+        centerX: Double,
+        centerY: Double,
+        width: Double,
+        height: Double
+    ): Unit = instance.ellipse(centerX, centerY, width, height)
+
     protected def translateBy(x: Double, y: Double): Unit =
       instance.translate(x, y)
     protected def rotateBy(radians: Double): Unit = instance.rotate(radians)
@@ -114,6 +121,7 @@ final class P5Provider private[p5] (
     instance.colorMode(instance.RGB, 1.0)
     instance.blendMode(instance.BLEND)
     instance.rectMode(instance.CORNER)
+    instance.ellipseMode(instance.CENTER)
     instance.angleMode(instance.RADIANS)
     instance.stroke(0.0, 0.0, 0.0, 1.0)
     instance.fill(1.0, 1.0, 1.0, 1.0)
