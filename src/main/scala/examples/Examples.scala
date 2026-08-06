@@ -11,7 +11,8 @@ private[examples] object Examples:
 
   val all: Vector[Example] = Vector(
     Example("Basic Shapes", "BasicShapes", BasicShapes),
-    Example("Color Walk", "ColorWalk", ColorWalk)
+    Example("Color Walk", "ColorWalk", ColorWalk),
+    Example("Polygons", "Polygons", Polygons)
   ).sortBy(_.name)
 
   val idents: Vector[String] = all.map(_.ident)
