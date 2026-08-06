@@ -5,7 +5,7 @@ import genart.{Sketch, SketchContext}
 private[examples] object Examples:
   val all: Map[String, SketchContext => Sketch] = Map(
     "BasicShapes" -> BasicShapes,
-    "Square" -> Square
+    "ColorWalk" -> ColorWalk
   )
 
   val names: Vector[String] = all.keys.toVector.sorted
