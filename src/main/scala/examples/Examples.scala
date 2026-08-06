@@ -3,12 +3,18 @@ package examples
 import genart.{Sketch, SketchContext}
 
 private[examples] object Examples:
-  val all: Map[String, SketchContext => Sketch] = Map(
-    "BasicShapes" -> BasicShapes,
-    "ColorWalk" -> ColorWalk
+  final case class Example(
+      name: String,
+      ident: String,
+      factory: SketchContext => Sketch
   )
 
-  val names: Vector[String] = all.keys.toVector.sorted
+  val all: Vector[Example] = Vector(
+    Example("Basic Shapes", "BasicShapes", BasicShapes),
+    Example("Color Walk", "ColorWalk", ColorWalk)
+  ).sortBy(_.name)
 
-  def select(name: String): Either[String, SketchContext => Sketch] =
-    all.get(name).toRight(s"Unknown example '$name'")
+  val idents: Vector[String] = all.map(_.ident)
+
+  def select(ident: String): Either[String, Example] =
+    all.find(_.ident == ident).toRight(s"Unknown example '$ident'")

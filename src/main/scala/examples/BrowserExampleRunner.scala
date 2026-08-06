@@ -11,13 +11,13 @@ import scala.scalajs.js.JSConverters.*
 final class BrowserExampleRunner(container: dom.Element) extends js.Object:
   private var current = Option.empty[SketchHandle]
 
-  def startExample(name: String): Unit =
-    Examples.select(name).fold[Unit](
+  def startExample(ident: String): Unit =
+    Examples.select(ident).fold[Unit](
       error =>
-        dom.console.error(error + s". Available: ${Examples.names.mkString(", ")}"),
-      create =>
+        dom.console.error(error + s". Available: ${Examples.idents.mkString(", ")}"),
+      example =>
         endExample()
-        current = Some(P5Provider.run(container)(create))
+        current = Some(P5Provider.run(container)(example.factory))
     )
 
   def endExample(): Unit =
@@ -28,5 +28,8 @@ final class BrowserExampleRunner(container: dom.Element) extends js.Object:
   def isRunning(): Boolean = current.exists(handle => !handle.isStopped)
 
 object BrowserExampleRunner:
-  @JSExportTopLevel("exampleNames")
-  def names(): js.Array[String] = Examples.names.toJSArray
+  @JSExportTopLevel("listExamples")
+  def listExamples(): js.Array[js.Dictionary[String]] =
+    Examples.all.map { example =>
+      js.Dictionary("name" -> example.name, "ident" -> example.ident)
+    }.toJSArray

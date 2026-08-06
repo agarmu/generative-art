@@ -1,4 +1,4 @@
-import { BrowserExampleRunner, exampleNames } from "#examples";
+import { BrowserExampleRunner, listExamples } from "#examples";
 
 const select = document.getElementById("example");
 const toggle = document.getElementById("toggle");
@@ -9,8 +9,8 @@ const resize = document.getElementById("resize");
 const runner = new BrowserExampleRunner(container);
 let drag = null;
 
-for (const name of exampleNames()) {
-  select.add(new Option(name, name));
+for (const { name, ident } of listExamples()) {
+  select.add(new Option(name, ident));
 }
 
 function stop() {

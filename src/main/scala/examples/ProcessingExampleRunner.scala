@@ -4,21 +4,21 @@ import genart.processing.ProcessingProvider
 
 object ProcessingExampleRunner:
   def main(args: Array[String]): Unit =
-    val availableExamples = Examples.names.mkString(", ")
+    val availableExamples = Examples.idents.mkString(", ")
     val selected = for
-      name <- args match
-        case Array(name) => Right(name)
+      ident <- args match
+        case Array(ident) => Right(ident)
         case _           => Left("Usage: ProcessingExampleRunner <example>")
-      create <- Examples.select(name)
-    yield (name, create)
+      example <- Examples.select(ident)
+    yield example
 
     selected.fold[Unit](
       error => Console.err.println(error + s". Available: ${availableExamples}"),
-      (name, create) =>
+      example =>
         ProcessingProvider.run(
           window = ProcessingProvider.Window(
-            title = name,
+            title = example.name,
             size = Some((960, 720))
           )
-        )(create)
+        )(example.factory)
     )
