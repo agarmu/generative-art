@@ -2,7 +2,7 @@ package examples
 
 import genart.{Color, Frame, Sketch, SketchContext}
 
-final class Ellipses(context: SketchContext) extends Sketch:
+final class BasicShapes(context: SketchContext) extends Sketch:
   private val canvas = context.canvas
 
   def draw(frame: Frame): Unit =
@@ -21,5 +21,11 @@ final class Ellipses(context: SketchContext) extends Sketch:
     canvas.strokeWeight(2.0)
     canvas.circle(x, y, size * 0.6)
 
-object Ellipses extends (SketchContext => Ellipses):
-  def apply(context: SketchContext): Ellipses = new Ellipses(context)
+    val side = size * 0.65
+    val offset = size * 0.1
+    canvas.noStroke()
+    canvas.fill(Color.hsb(40.0, 0.65, 0.9, 0.4))
+    canvas.rect(x + offset - side / 2.0, y + offset - side / 2.0, side, side)
+
+object BasicShapes extends (SketchContext => BasicShapes):
+  def apply(context: SketchContext): BasicShapes = new BasicShapes(context)

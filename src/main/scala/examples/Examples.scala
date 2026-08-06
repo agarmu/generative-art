@@ -4,7 +4,7 @@ import genart.{Sketch, SketchContext}
 
 private[examples] object Examples:
   val all: Map[String, SketchContext => Sketch] = Map(
-    "Ellipses" -> Ellipses,
+    "BasicShapes" -> BasicShapes,
     "Square" -> Square
   )
 
