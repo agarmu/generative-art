@@ -99,6 +99,26 @@ final class P5Provider private[p5] (
         height: Double
     ): Unit = instance.ellipse(centerX, centerY, width, height)
 
+    protected def drawTriangle(
+        x1: Double,
+        y1: Double,
+        x2: Double,
+        y2: Double,
+        x3: Double,
+        y3: Double
+    ): Unit = instance.triangle(x1, y1, x2, y2, x3, y3)
+
+    protected def drawQuad(
+        x1: Double,
+        y1: Double,
+        x2: Double,
+        y2: Double,
+        x3: Double,
+        y3: Double,
+        x4: Double,
+        y4: Double
+    ): Unit = instance.quad(x1, y1, x2, y2, x3, y3, x4, y4)
+
     protected def translateBy(x: Double, y: Double): Unit =
       instance.translate(x, y)
     protected def rotateBy(radians: Double): Unit = instance.rotate(radians)

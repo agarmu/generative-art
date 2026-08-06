@@ -64,6 +64,48 @@ trait Canvas:
   final def circle(center: Vec[2], diameter: Double): Unit =
     circle(center.x, center.y, diameter)
 
+  final def triangle(
+      x1: Double,
+      y1: Double,
+      x2: Double,
+      y2: Double,
+      x3: Double,
+      y3: Double
+  ): Unit =
+    requireFinite(x1, "x1")
+    requireFinite(y1, "y1")
+    requireFinite(x2, "x2")
+    requireFinite(y2, "y2")
+    requireFinite(x3, "x3")
+    requireFinite(y3, "y3")
+    drawTriangle(x1, y1, x2, y2, x3, y3)
+
+  final def triangle(a: Vec[2], b: Vec[2], c: Vec[2]): Unit =
+    triangle(a.x, a.y, b.x, b.y, c.x, c.y)
+
+  final def quad(
+      x1: Double,
+      y1: Double,
+      x2: Double,
+      y2: Double,
+      x3: Double,
+      y3: Double,
+      x4: Double,
+      y4: Double
+  ): Unit =
+    requireFinite(x1, "x1")
+    requireFinite(y1, "y1")
+    requireFinite(x2, "x2")
+    requireFinite(y2, "y2")
+    requireFinite(x3, "x3")
+    requireFinite(y3, "y3")
+    requireFinite(x4, "x4")
+    requireFinite(y4, "y4")
+    drawQuad(x1, y1, x2, y2, x3, y3, x4, y4)
+
+  final def quad(a: Vec[2], b: Vec[2], c: Vec[2], d: Vec[2]): Unit =
+    quad(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y)
+
   final def line(x1: Double, y1: Double, x2: Double, y2: Double): Unit =
     requireFinite(x1, "x1")
     requireFinite(y1, "y1")
@@ -112,6 +154,24 @@ trait Canvas:
       centerY: Double,
       width: Double,
       height: Double
+  ): Unit
+  protected def drawTriangle(
+      x1: Double,
+      y1: Double,
+      x2: Double,
+      y2: Double,
+      x3: Double,
+      y3: Double
+  ): Unit
+  protected def drawQuad(
+      x1: Double,
+      y1: Double,
+      x2: Double,
+      y2: Double,
+      x3: Double,
+      y3: Double,
+      x4: Double,
+      y4: Double
   ): Unit
   protected def translateBy(x: Double, y: Double): Unit
   protected def rotateBy(radians: Double): Unit

@@ -81,6 +81,31 @@ class ProcessingSuite extends munit.FunSuite:
     assertEquals(image(46, 25), black)
   }
 
+  rendering.test("triangles and quads use the supplied vertices") {
+    case (_, provider) =>
+      provider.initialize(60.0)
+      val canvas = provider.canvas
+      canvas.background(black)
+      canvas.noStroke()
+      canvas.fill(red)
+      canvas.triangle(Vec(4.0, 4.0), Vec(28.0, 4.0), Vec(4.0, 28.0))
+      canvas.fill(green)
+      canvas.quad(
+        Vec(36.0, 4.0),
+        Vec(60.0, 8.0),
+        Vec(56.0, 28.0),
+        Vec(32.0, 24.0)
+      )
+      val image = canvas.snapshot()
+      assertEquals(image(8, 8), red)
+      assertEquals(image(20, 8), red)
+      assertEquals(image(24, 24), black)
+      assertEquals(image(46, 16), green)
+      assertEquals(image(36, 20), green)
+      assertEquals(image(60, 24), black)
+      assertEquals(image(32, 4), black)
+  }
+
   rendering.test(
     "nested scopes restore native style and transforms after failure"
   ) { case (_, provider) =>
@@ -180,6 +205,12 @@ class ProcessingSuite extends munit.FunSuite:
     }
     intercept[IllegalArgumentException] {
       provider.canvas.ellipse(0.0, 0.0, Double.MaxValue, 1.0)
+    }
+    intercept[IllegalArgumentException] {
+      provider.canvas.triangle(0.0, 0.0, 1.0, 0.0, Double.MaxValue, 1.0)
+    }
+    intercept[IllegalArgumentException] {
+      provider.canvas.quad(0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, Double.MaxValue)
     }
     intercept[IllegalArgumentException] {
       provider.initialize(Double.MinPositiveValue)

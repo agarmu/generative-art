@@ -42,6 +42,24 @@ private[p5] class P5(sketch: js.Function1[P5, Unit], container: dom.Element)
   def line(x1: Double, y1: Double, x2: Double, y2: Double): Unit = js.native
   def ellipse(x: Double, y: Double, width: Double, height: Double): Unit =
     js.native
+  def triangle(
+      x1: Double,
+      y1: Double,
+      x2: Double,
+      y2: Double,
+      x3: Double,
+      y3: Double
+  ): Unit = js.native
+  def quad(
+      x1: Double,
+      y1: Double,
+      x2: Double,
+      y2: Double,
+      x3: Double,
+      y3: Double,
+      x4: Double,
+      y4: Double
+  ): Unit = js.native
   def translate(x: Double, y: Double): Unit = js.native
   def rotate(radians: Double): Unit = js.native
   def scale(x: Double, y: Double): Unit = js.native

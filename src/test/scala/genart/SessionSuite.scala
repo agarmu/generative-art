@@ -309,6 +309,24 @@ private[genart] class TestProvider extends SketchProvider:
         x2: Double,
         y2: Double
     ): Unit = ()
+    protected def drawTriangle(
+        x1: Double,
+        y1: Double,
+        x2: Double,
+        y2: Double,
+        x3: Double,
+        y3: Double
+    ): Unit = ()
+    protected def drawQuad(
+        x1: Double,
+        y1: Double,
+        x2: Double,
+        y2: Double,
+        x3: Double,
+        y3: Double,
+        x4: Double,
+        y4: Double
+    ): Unit = ()
     protected def translateBy(x: Double, y: Double): Unit = ()
     protected def rotateBy(radians: Double): Unit = ()
     protected def scaleBy(x: Double, y: Double): Unit = ()

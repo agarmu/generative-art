@@ -62,6 +62,23 @@ class CanvasSuite extends munit.FunSuite:
     assertRejected(canvas.ellipse(0.0, 0.0, 1.0, Double.PositiveInfinity))
     assertRejected(canvas.circle(0.0, 0.0, -1.0))
     assertRejected(canvas.circle(Vec(0.0, 0.0), Double.NaN))
+    assertRejected(canvas.triangle(0.0, 0.0, 1.0, 0.0, Double.NaN, 1.0))
+    assertRejected(
+      canvas.triangle(
+        Vec(0.0, 0.0),
+        Vec(1.0, 0.0),
+        Vec(0.0, Double.PositiveInfinity)
+      )
+    )
+    assertRejected(canvas.quad(0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, Double.NaN))
+    assertRejected(
+      canvas.quad(
+        Vec(0.0, 0.0),
+        Vec(1.0, 0.0),
+        Vec(1.0, 1.0),
+        Vec(Double.NegativeInfinity, 1.0)
+      )
+    )
     assertRejected(canvas.line(0.0, Double.NaN, 1.0, 1.0))
     assertRejected(canvas.rotate(Double.PositiveInfinity))
     assert(canvas.state == initial && canvas.lines.isEmpty)
@@ -113,6 +130,24 @@ class CanvasSuite extends munit.FunSuite:
         y2: Double
     ): Unit =
       lines += ((Vector(x1, y1, x2, y2), state))
+    protected def drawTriangle(
+        x1: Double,
+        y1: Double,
+        x2: Double,
+        y2: Double,
+        x3: Double,
+        y3: Double
+    ): Unit = fail("invalid triangle reached the renderer")
+    protected def drawQuad(
+        x1: Double,
+        y1: Double,
+        x2: Double,
+        y2: Double,
+        x3: Double,
+        y3: Double,
+        x4: Double,
+        y4: Double
+    ): Unit = fail("invalid quad reached the renderer")
     protected def translateBy(x: Double, y: Double): Unit =
       transform("translate", x, y)
     protected def rotateBy(radians: Double): Unit =

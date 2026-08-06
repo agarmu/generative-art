@@ -114,6 +114,42 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
         native(height)
       )
 
+    protected def drawTriangle(
+        x1: Double,
+        y1: Double,
+        x2: Double,
+        y2: Double,
+        x3: Double,
+        y3: Double
+    ): Unit = graphics.triangle(
+      native(x1),
+      native(y1),
+      native(x2),
+      native(y2),
+      native(x3),
+      native(y3)
+    )
+
+    protected def drawQuad(
+        x1: Double,
+        y1: Double,
+        x2: Double,
+        y2: Double,
+        x3: Double,
+        y3: Double,
+        x4: Double,
+        y4: Double
+    ): Unit = graphics.quad(
+      native(x1),
+      native(y1),
+      native(x2),
+      native(y2),
+      native(x3),
+      native(y3),
+      native(x4),
+      native(y4)
+    )
+
     protected def translateBy(x: Double, y: Double): Unit =
       graphics.translate(native(x), native(y))
 
