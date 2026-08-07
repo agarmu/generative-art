@@ -17,7 +17,11 @@ final class Polygons(context: SketchContext) extends Sketch:
     canvas.stroke(Color.rgb(0.15, 0.15, 0.15))
     canvas.strokeWeight(2.0)
     canvas.fill(Color.hsb(210.0, 0.65, 0.85))
-    canvas.triangle(left - half, y + half, left, y - half, left + half, y + half)
+    canvas.triangle(
+      Vec(left - half, y + half),
+      Vec(left, y - half),
+      Vec(left + half, y + half)
+    )
     canvas.fill(Color.hsb(330.0, 0.6, 0.85, 0.65))
     canvas.quad(
       Vec(right - size * 0.45, y - size * 0.3),

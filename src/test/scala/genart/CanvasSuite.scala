@@ -21,7 +21,7 @@ class CanvasSuite extends munit.FunSuite:
       val outer = canvas.state
       val thrown = Try(canvas.scoped {
         canvas.style(Style(Some(blue), Some(red), 4.0))
-        canvas.scale(2.0, 3.0)
+        canvas.scale(Vec(2.0, 3.0))
         canvas.line(Vec(1.0, 2.0), Vec(3.0, 4.0))
         throw failure
       }).failed.get
@@ -56,13 +56,17 @@ class CanvasSuite extends munit.FunSuite:
     for invalid <- List(-1.0, Double.NaN, Double.PositiveInfinity) do
       assertRejected(canvas.strokeWeight(invalid))
     assertRejected(canvas.background(red.withAlpha(0.5)))
-    assertRejected(canvas.rect(0.0, 0.0, -1.0, 5.0))
-    assertRejected(canvas.ellipse(0.0, 0.0, -1.0, 5.0))
+    assertRejected(canvas.rect(Vec(0.0, 0.0), Vec(-1.0, 5.0)))
+    assertRejected(canvas.ellipse(Vec(0.0, 0.0), Vec(-1.0, 5.0)))
     assertRejected(canvas.ellipse(Vec(0.0, Double.NaN), Vec(1.0, 2.0)))
-    assertRejected(canvas.ellipse(0.0, 0.0, 1.0, Double.PositiveInfinity))
-    assertRejected(canvas.circle(0.0, 0.0, -1.0))
+    assertRejected(
+      canvas.ellipse(Vec(0.0, 0.0), Vec(1.0, Double.PositiveInfinity))
+    )
+    assertRejected(canvas.circle(Vec(0.0, 0.0), -1.0))
     assertRejected(canvas.circle(Vec(0.0, 0.0), Double.NaN))
-    assertRejected(canvas.triangle(0.0, 0.0, 1.0, 0.0, Double.NaN, 1.0))
+    assertRejected(
+      canvas.triangle(Vec(0.0, 0.0), Vec(1.0, 0.0), Vec(Double.NaN, 1.0))
+    )
     assertRejected(
       canvas.triangle(
         Vec(0.0, 0.0),
@@ -70,7 +74,14 @@ class CanvasSuite extends munit.FunSuite:
         Vec(0.0, Double.PositiveInfinity)
       )
     )
-    assertRejected(canvas.quad(0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, Double.NaN))
+    assertRejected(
+      canvas.quad(
+        Vec(0.0, 0.0),
+        Vec(1.0, 0.0),
+        Vec(1.0, 1.0),
+        Vec(0.0, Double.NaN)
+      )
+    )
     assertRejected(
       canvas.quad(
         Vec(0.0, 0.0),
@@ -79,7 +90,7 @@ class CanvasSuite extends munit.FunSuite:
         Vec(Double.NegativeInfinity, 1.0)
       )
     )
-    assertRejected(canvas.line(0.0, Double.NaN, 1.0, 1.0))
+    assertRejected(canvas.line(Vec(0.0, Double.NaN), Vec(1.0, 1.0)))
     assertRejected(canvas.rotate(Double.PositiveInfinity))
     assert(canvas.state == initial && canvas.lines.isEmpty)
   }
@@ -111,48 +122,23 @@ class CanvasSuite extends munit.FunSuite:
     protected def setStrokeWeight(weight: Double): Unit = state =
       state.copy(weight = weight)
     protected def clearSurface(color: Color): Unit = ()
-    protected def drawRect(
-        x: Double,
-        y: Double,
-        width: Double,
-        height: Double
-    ): Unit = ()
-    protected def drawEllipse(
-        centerX: Double,
-        centerY: Double,
-        width: Double,
-        height: Double
-    ): Unit = fail("invalid ellipse reached the renderer")
-    protected def drawLine(
-        x1: Double,
-        y1: Double,
-        x2: Double,
-        y2: Double
-    ): Unit =
-      lines += ((Vector(x1, y1, x2, y2), state))
-    protected def drawTriangle(
-        x1: Double,
-        y1: Double,
-        x2: Double,
-        y2: Double,
-        x3: Double,
-        y3: Double
-    ): Unit = fail("invalid triangle reached the renderer")
-    protected def drawQuad(
-        x1: Double,
-        y1: Double,
-        x2: Double,
-        y2: Double,
-        x3: Double,
-        y3: Double,
-        x4: Double,
-        y4: Double
-    ): Unit = fail("invalid quad reached the renderer")
-    protected def translateBy(x: Double, y: Double): Unit =
-      transform("translate", x, y)
+    protected def drawRect(position: Vec[2], size: Vec[2]): Unit = ()
+    protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit = fail(
+      "invalid ellipse reached the renderer"
+    )
+    protected def drawLine(from: Vec[2], to: Vec[2]): Unit =
+      lines += ((Vector(from.x, from.y, to.x, to.y), state))
+    protected def drawTriangle(a: Vec[2], b: Vec[2], c: Vec[2]): Unit = fail(
+      "invalid triangle reached the renderer"
+    )
+    protected def drawQuad(a: Vec[2], b: Vec[2], c: Vec[2], d: Vec[2]): Unit =
+      fail("invalid quad reached the renderer")
+    protected def translateBy(offset: Vec[2]): Unit =
+      transform("translate", offset.x, offset.y)
     protected def rotateBy(radians: Double): Unit =
       transform("rotate", radians, 0.0)
-    protected def scaleBy(x: Double, y: Double): Unit = transform("scale", x, y)
+    protected def scaleBy(factors: Vec[2]): Unit =
+      transform("scale", factors.x, factors.y)
     protected def pushState(): Unit = saved = state :: saved
     protected def popState(): Unit =
       state = saved.head

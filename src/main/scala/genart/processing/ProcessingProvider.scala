@@ -1,5 +1,6 @@
 package genart.processing
 
+import genart.lib.math.Vec
 import genart.{
   Canvas,
   Color,
@@ -87,76 +88,54 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
         color.blue.toFloat
       )
 
-    protected def drawRect(
-        x: Double,
-        y: Double,
-        width: Double,
-        height: Double
-    ): Unit = graphics.rect(native(x), native(y), native(width), native(height))
-
-    protected def drawLine(
-        x1: Double,
-        y1: Double,
-        x2: Double,
-        y2: Double
-    ): Unit = graphics.line(native(x1), native(y1), native(x2), native(y2))
-
-    protected def drawEllipse(
-        centerX: Double,
-        centerY: Double,
-        width: Double,
-        height: Double
-    ): Unit =
-      graphics.ellipse(
-        native(centerX),
-        native(centerY),
-        native(width),
-        native(height)
+    protected def drawRect(position: Vec[2], size: Vec[2]): Unit =
+      graphics.rect(
+        native(position.x),
+        native(position.y),
+        native(size.x),
+        native(size.y)
       )
 
-    protected def drawTriangle(
-        x1: Double,
-        y1: Double,
-        x2: Double,
-        y2: Double,
-        x3: Double,
-        y3: Double
-    ): Unit = graphics.triangle(
-      native(x1),
-      native(y1),
-      native(x2),
-      native(y2),
-      native(x3),
-      native(y3)
-    )
+    protected def drawLine(from: Vec[2], to: Vec[2]): Unit =
+      graphics.line(native(from.x), native(from.y), native(to.x), native(to.y))
 
-    protected def drawQuad(
-        x1: Double,
-        y1: Double,
-        x2: Double,
-        y2: Double,
-        x3: Double,
-        y3: Double,
-        x4: Double,
-        y4: Double
-    ): Unit = graphics.quad(
-      native(x1),
-      native(y1),
-      native(x2),
-      native(y2),
-      native(x3),
-      native(y3),
-      native(x4),
-      native(y4)
-    )
+    protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit =
+      graphics.ellipse(
+        native(center.x),
+        native(center.y),
+        native(size.x),
+        native(size.y)
+      )
 
-    protected def translateBy(x: Double, y: Double): Unit =
-      graphics.translate(native(x), native(y))
+    protected def drawTriangle(a: Vec[2], b: Vec[2], c: Vec[2]): Unit =
+      graphics.triangle(
+        native(a.x),
+        native(a.y),
+        native(b.x),
+        native(b.y),
+        native(c.x),
+        native(c.y)
+      )
+
+    protected def drawQuad(a: Vec[2], b: Vec[2], c: Vec[2], d: Vec[2]): Unit =
+      graphics.quad(
+        native(a.x),
+        native(a.y),
+        native(b.x),
+        native(b.y),
+        native(c.x),
+        native(c.y),
+        native(d.x),
+        native(d.y)
+      )
+
+    protected def translateBy(offset: Vec[2]): Unit =
+      graphics.translate(native(offset.x), native(offset.y))
 
     protected def rotateBy(radians: Double): Unit =
       graphics.rotate(native(radians))
-    protected def scaleBy(x: Double, y: Double): Unit =
-      graphics.scale(native(x), native(y))
+    protected def scaleBy(factors: Vec[2]): Unit =
+      graphics.scale(native(factors.x), native(factors.y))
 
     protected def pushState(): Unit = graphics.push()
     protected def popState(): Unit = graphics.pop()

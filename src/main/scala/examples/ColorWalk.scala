@@ -1,7 +1,7 @@
 package examples
 
 import genart.{Color, Frame, Sketch, SketchContext, Step}
-import genart.lib.math.floorMod
+import genart.lib.math.{Vec, floorMod}
 import genart.lib.random.Rng
 
 final class ColorWalk(context: SketchContext) extends Sketch:
@@ -40,35 +40,35 @@ final class ColorWalk(context: SketchContext) extends Sketch:
     canvas.background(background)
     canvas.noStroke()
     canvas.fill(Color.hsb(hue, 0.7, 0.85))
-    canvas.rect(squareX - radius, y - radius, size, size)
+    canvas.rect(Vec(squareX - radius, y - radius), Vec(size, size))
 
     canvas.strokeWeight(size * 0.012)
     for degrees <- 0 until 360 do
       val angle = math.toRadians(degrees.toDouble)
       canvas.stroke(Color.hsb(degrees.toDouble, 0.7, 0.85))
       canvas.line(
-        wheelX,
-        y,
-        wheelX + radius * math.cos(angle),
-        y + radius * math.sin(angle)
+        Vec(wheelX, y),
+        Vec(wheelX + radius * math.cos(angle), y + radius * math.sin(angle))
       )
 
     canvas.noFill()
     canvas.stroke(background)
     canvas.strokeWeight(size * 0.04)
-    canvas.circle(wheelX, y, size * 1.04)
+    canvas.circle(Vec(wheelX, y), size * 1.04)
 
     canvas.noStroke()
     canvas.fill(background)
-    canvas.circle(wheelX, y, size * 0.92)
+    canvas.circle(Vec(wheelX, y), size * 0.92)
 
     val markerAngle = floorMod(angle, 2.0 * math.Pi)
     canvas.noFill()
     canvas.stroke(Color.rgb(0.1, 0.1, 0.1))
     canvas.strokeWeight(size * 0.008)
     canvas.circle(
-      wheelX + radius * 0.96 * math.cos(markerAngle),
-      y + radius * 0.96 * math.sin(markerAngle),
+      Vec(
+        wheelX + radius * 0.96 * math.cos(markerAngle),
+        y + radius * 0.96 * math.sin(markerAngle)
+      ),
       size * 0.1
     )
 

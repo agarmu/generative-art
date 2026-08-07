@@ -1,5 +1,6 @@
 package genart.processing
 
+import genart.lib.math.Vec
 import genart.{Color, Frame, Sketch}
 import genart.lib.random.Seed
 import genart.lib.runtime.{RunConfig, SketchSession}
@@ -90,7 +91,7 @@ object ProcessingWindowSmoke:
                   context.canvas.fill(Color.rgb(1.0, 0.0, 0.0))
 
                 def draw(frame: Frame): Unit =
-                  context.canvas.rect(0.0, 0.0, 20.0, 20.0)
+                  context.canvas.rect(Vec(0.0, 0.0), Vec(20.0, 20.0))
           }
         )
       if frames == 1 then session.foreach(_.resize(240, 180))

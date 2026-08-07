@@ -1,5 +1,6 @@
 package genart
 
+import genart.lib.math.Vec
 import genart.lib.random.{Rng, Seed}
 import genart.lib.runtime.{RunConfig, SketchSession}
 import scala.collection.mutable.ArrayBuffer
@@ -291,45 +292,15 @@ private[genart] class TestProvider extends SketchProvider:
     protected def disableFill(): Unit = ()
     protected def setStrokeWeight(weight: Double): Unit = ()
     protected def clearSurface(color: Color): Unit = ()
-    protected def drawRect(
-        x: Double,
-        y: Double,
-        width: Double,
-        height: Double
-    ): Unit = ()
-    protected def drawEllipse(
-        centerX: Double,
-        centerY: Double,
-        width: Double,
-        height: Double
-    ): Unit = ()
-    protected def drawLine(
-        x1: Double,
-        y1: Double,
-        x2: Double,
-        y2: Double
-    ): Unit = ()
-    protected def drawTriangle(
-        x1: Double,
-        y1: Double,
-        x2: Double,
-        y2: Double,
-        x3: Double,
-        y3: Double
-    ): Unit = ()
-    protected def drawQuad(
-        x1: Double,
-        y1: Double,
-        x2: Double,
-        y2: Double,
-        x3: Double,
-        y3: Double,
-        x4: Double,
-        y4: Double
-    ): Unit = ()
-    protected def translateBy(x: Double, y: Double): Unit = ()
+    protected def drawRect(position: Vec[2], size: Vec[2]): Unit = ()
+    protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit = ()
+    protected def drawLine(from: Vec[2], to: Vec[2]): Unit = ()
+    protected def drawTriangle(a: Vec[2], b: Vec[2], c: Vec[2]): Unit = ()
+    protected def drawQuad(a: Vec[2], b: Vec[2], c: Vec[2], d: Vec[2]): Unit =
+      ()
+    protected def translateBy(offset: Vec[2]): Unit = ()
     protected def rotateBy(radians: Double): Unit = ()
-    protected def scaleBy(x: Double, y: Double): Unit = ()
+    protected def scaleBy(factors: Vec[2]): Unit = ()
     protected def pushState(): Unit = events += "push"
     protected def popState(): Unit = events += "pop"
 

@@ -1,5 +1,6 @@
 package genart.p5
 
+import genart.lib.math.Vec
 import genart.{
   Canvas,
   Color,
@@ -78,51 +79,26 @@ final class P5Provider private[p5] (
     protected def clearSurface(color: Color): Unit =
       instance.background(color.red, color.green, color.blue)
 
-    protected def drawRect(
-        x: Double,
-        y: Double,
-        width: Double,
-        height: Double
-    ): Unit = instance.rect(x, y, width, height)
+    protected def drawRect(position: Vec[2], size: Vec[2]): Unit =
+      instance.rect(position.x, position.y, size.x, size.y)
 
-    protected def drawLine(
-        x1: Double,
-        y1: Double,
-        x2: Double,
-        y2: Double
-    ): Unit = instance.line(x1, y1, x2, y2)
+    protected def drawLine(from: Vec[2], to: Vec[2]): Unit =
+      instance.line(from.x, from.y, to.x, to.y)
 
-    protected def drawEllipse(
-        centerX: Double,
-        centerY: Double,
-        width: Double,
-        height: Double
-    ): Unit = instance.ellipse(centerX, centerY, width, height)
+    protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit =
+      instance.ellipse(center.x, center.y, size.x, size.y)
 
-    protected def drawTriangle(
-        x1: Double,
-        y1: Double,
-        x2: Double,
-        y2: Double,
-        x3: Double,
-        y3: Double
-    ): Unit = instance.triangle(x1, y1, x2, y2, x3, y3)
+    protected def drawTriangle(a: Vec[2], b: Vec[2], c: Vec[2]): Unit =
+      instance.triangle(a.x, a.y, b.x, b.y, c.x, c.y)
 
-    protected def drawQuad(
-        x1: Double,
-        y1: Double,
-        x2: Double,
-        y2: Double,
-        x3: Double,
-        y3: Double,
-        x4: Double,
-        y4: Double
-    ): Unit = instance.quad(x1, y1, x2, y2, x3, y3, x4, y4)
+    protected def drawQuad(a: Vec[2], b: Vec[2], c: Vec[2], d: Vec[2]): Unit =
+      instance.quad(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y)
 
-    protected def translateBy(x: Double, y: Double): Unit =
-      instance.translate(x, y)
+    protected def translateBy(offset: Vec[2]): Unit =
+      instance.translate(offset.x, offset.y)
     protected def rotateBy(radians: Double): Unit = instance.rotate(radians)
-    protected def scaleBy(x: Double, y: Double): Unit = instance.scale(x, y)
+    protected def scaleBy(factors: Vec[2]): Unit =
+      instance.scale(factors.x, factors.y)
     protected def pushState(): Unit = instance.push()
     protected def popState(): Unit = instance.pop()
 

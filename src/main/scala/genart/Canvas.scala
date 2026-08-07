@@ -28,113 +28,60 @@ trait Canvas:
     require(color.alpha == 1.0, "background must be opaque")
     clearSurface(color)
 
-  final def rect(x: Double, y: Double, width: Double, height: Double): Unit =
-    requireFinite(x, "x")
-    requireFinite(y, "y")
-    requireFinite(width, "width")
-    requireFinite(height, "height")
-    require(
-      width >= 0.0 && height >= 0.0,
-      "rectangle dimensions must be nonnegative"
-    )
-    drawRect(x, y, width, height)
-
-  final def ellipse(
-      centerX: Double,
-      centerY: Double,
-      width: Double,
-      height: Double
-  ): Unit =
-    requireFinite(centerX, "centerX")
-    requireFinite(centerY, "centerY")
-    requireFinite(width, "width")
-    requireFinite(height, "height")
-    require(
-      width >= 0.0 && height >= 0.0,
-      "ellipse dimensions must be nonnegative"
-    )
-    drawEllipse(centerX, centerY, width, height)
+  final def rect(position: Vec[2], size: Vec[2]): Unit =
+    validatePoint(position)
+    validateSize(size)
+    drawRect(position, size)
 
   final def ellipse(center: Vec[2], size: Vec[2]): Unit =
-    ellipse(center.x, center.y, size.x, size.y)
-
-  final def circle(centerX: Double, centerY: Double, diameter: Double): Unit =
-    ellipse(centerX, centerY, diameter, diameter)
+    validatePoint(center)
+    validateSize(size)
+    drawEllipse(center, size)
 
   final def circle(center: Vec[2], diameter: Double): Unit =
-    circle(center.x, center.y, diameter)
-
-  final def triangle(
-      x1: Double,
-      y1: Double,
-      x2: Double,
-      y2: Double,
-      x3: Double,
-      y3: Double
-  ): Unit =
-    requireFinite(x1, "x1")
-    requireFinite(y1, "y1")
-    requireFinite(x2, "x2")
-    requireFinite(y2, "y2")
-    requireFinite(x3, "x3")
-    requireFinite(y3, "y3")
-    drawTriangle(x1, y1, x2, y2, x3, y3)
+    ellipse(center, Vec(diameter, diameter))
 
   final def triangle(a: Vec[2], b: Vec[2], c: Vec[2]): Unit =
-    triangle(a.x, a.y, b.x, b.y, c.x, c.y)
-
-  final def quad(
-      x1: Double,
-      y1: Double,
-      x2: Double,
-      y2: Double,
-      x3: Double,
-      y3: Double,
-      x4: Double,
-      y4: Double
-  ): Unit =
-    requireFinite(x1, "x1")
-    requireFinite(y1, "y1")
-    requireFinite(x2, "x2")
-    requireFinite(y2, "y2")
-    requireFinite(x3, "x3")
-    requireFinite(y3, "y3")
-    requireFinite(x4, "x4")
-    requireFinite(y4, "y4")
-    drawQuad(x1, y1, x2, y2, x3, y3, x4, y4)
+    validatePoint(a)
+    validatePoint(b)
+    validatePoint(c)
+    drawTriangle(a, b, c)
 
   final def quad(a: Vec[2], b: Vec[2], c: Vec[2], d: Vec[2]): Unit =
-    quad(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y)
-
-  final def line(x1: Double, y1: Double, x2: Double, y2: Double): Unit =
-    requireFinite(x1, "x1")
-    requireFinite(y1, "y1")
-    requireFinite(x2, "x2")
-    requireFinite(y2, "y2")
-    drawLine(x1, y1, x2, y2)
+    validatePoint(a)
+    validatePoint(b)
+    validatePoint(c)
+    validatePoint(d)
+    drawQuad(a, b, c, d)
 
   final def line(from: Vec[2], to: Vec[2]): Unit =
-    line(from.x, from.y, to.x, to.y)
+    validatePoint(from)
+    validatePoint(to)
+    drawLine(from, to)
 
-  final def translate(x: Double, y: Double): Unit =
-    requireFinite(x, "x")
-    requireFinite(y, "y")
-    translateBy(x, y)
-
-  final def translate(offset: Vec[2]): Unit = translate(offset.x, offset.y)
+  final def translate(offset: Vec[2]): Unit =
+    validatePoint(offset)
+    translateBy(offset)
 
   final def rotate(radians: Double): Unit =
     requireFinite(radians, "radians")
     rotateBy(radians)
 
-  final def scale(x: Double, y: Double): Unit =
-    requireFinite(x, "x")
-    requireFinite(y, "y")
-    scaleBy(x, y)
+  final def scale(factors: Vec[2]): Unit =
+    validatePoint(factors)
+    scaleBy(factors)
 
   final def scoped[A](body: => A): A =
     pushState()
     Using.resource(() => popState())(_ => body)(using Canvas.releaseScope)
+
+  private def validatePoint(point: Vec[2]): Unit =
+    requireFinite(point.x, "x")
+    requireFinite(point.y, "y")
+
+  private def validateSize(size: Vec[2]): Unit =
+    validatePoint(size)
+    require(size.x >= 0.0 && size.y >= 0.0, "dimensions must be nonnegative")
 
   protected def setStrokeColor(color: Color): Unit
   protected def setFillColor(color: Color): Unit
@@ -142,40 +89,14 @@ trait Canvas:
   protected def disableFill(): Unit
   protected def setStrokeWeight(weight: Double): Unit
   protected def clearSurface(color: Color): Unit
-  protected def drawRect(
-      x: Double,
-      y: Double,
-      width: Double,
-      height: Double
-  ): Unit
-  protected def drawLine(x1: Double, y1: Double, x2: Double, y2: Double): Unit
-  protected def drawEllipse(
-      centerX: Double,
-      centerY: Double,
-      width: Double,
-      height: Double
-  ): Unit
-  protected def drawTriangle(
-      x1: Double,
-      y1: Double,
-      x2: Double,
-      y2: Double,
-      x3: Double,
-      y3: Double
-  ): Unit
-  protected def drawQuad(
-      x1: Double,
-      y1: Double,
-      x2: Double,
-      y2: Double,
-      x3: Double,
-      y3: Double,
-      x4: Double,
-      y4: Double
-  ): Unit
-  protected def translateBy(x: Double, y: Double): Unit
+  protected def drawRect(position: Vec[2], size: Vec[2]): Unit
+  protected def drawLine(from: Vec[2], to: Vec[2]): Unit
+  protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit
+  protected def drawTriangle(a: Vec[2], b: Vec[2], c: Vec[2]): Unit
+  protected def drawQuad(a: Vec[2], b: Vec[2], c: Vec[2], d: Vec[2]): Unit
+  protected def translateBy(offset: Vec[2]): Unit
   protected def rotateBy(radians: Double): Unit
-  protected def scaleBy(x: Double, y: Double): Unit
+  protected def scaleBy(factors: Vec[2]): Unit
   protected def pushState(): Unit
   protected def popState(): Unit
 
