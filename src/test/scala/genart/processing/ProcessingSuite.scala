@@ -1,6 +1,6 @@
 package genart.processing
 
-import genart.{Color, Frame, Sketch, Step, StrokeCap, StrokeJoin}
+import genart.{ArcMode, Color, Frame, Path, Sketch, Step, StrokeCap, StrokeJoin}
 import genart.lib.math.Vec
 import genart.lib.random.Seed
 import genart.lib.runtime.{RunConfig, SketchSession}
@@ -108,6 +108,50 @@ class ProcessingSuite extends munit.FunSuite:
       assertEquals(image(36, 20), green)
       assertEquals(image(60, 24), black)
       assertEquals(image(32, 4), black)
+  }
+
+  rendering.test("arcs and mixed paths render through the native provider") {
+    case (_, provider) =>
+      provider.initialize(60.0)
+      val canvas = provider.canvas
+      canvas.background(black)
+      canvas.noStroke()
+      canvas.fill(red)
+      canvas.path(
+        Path(Vec(8.0, 48.0))
+          .lineTo(Vec(8.0, 32.0))
+          .quadraticTo(Vec(32.0, 0.0), Vec(56.0, 32.0))
+          .arcTo(Vec(56.0, 40.0), Vec(16.0, 16.0), -math.Pi / 2.0, math.Pi)
+          .bezierTo(Vec(56.0, 56.0), Vec(8.0, 56.0), Vec(8.0, 48.0))
+          .close
+      )
+      canvas.fill(green)
+      canvas.arc(
+        Vec(16.0, 16.0),
+        Vec(24.0, 24.0),
+        0.0,
+        math.Pi / 2.0,
+        ArcMode.Pie
+      )
+      val image = canvas.snapshot()
+      assertEquals(image(32, 32), red)
+      assertEquals(image(32, 10), black)
+      assertEquals(image(20, 20), green)
+  }
+
+  rendering.test("elliptical arcs preserve angles and tiny sweeps stay tiny") {
+    case (_, provider) =>
+      provider.initialize(60.0)
+      val canvas = provider.canvas
+      canvas.background(black)
+      canvas.noFill()
+      canvas.stroke(green)
+      canvas.strokeWeight(4.0)
+      canvas.arc(Vec(32.0, 32.0), Vec(48.0, 16.0), math.Pi / 4.0, math.Pi / 2.0)
+      assertEquals(canvas.snapshot()(17, 38), green)
+      canvas.background(black)
+      canvas.arc(Vec(32.0, 32.0), Vec(48.0, 48.0), 0.0, 1e-6)
+      assertEquals(canvas.snapshot()(8, 32), black)
   }
 
   rendering.test(

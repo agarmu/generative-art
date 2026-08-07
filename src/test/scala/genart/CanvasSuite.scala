@@ -94,6 +94,12 @@ class CanvasSuite extends munit.FunSuite:
     )
     assertRejected(canvas.line(Vec(0.0, Double.NaN), Vec(1.0, 1.0)))
     assertRejected(canvas.rotate(Double.PositiveInfinity))
+    assertRejected(canvas.translate(Vec(0.0, Double.NaN)))
+    assertRejected(canvas.scale(Vec(Double.PositiveInfinity, 1.0)))
+    assertRejected(canvas.arc(Vec(0.0, 0.0), Vec(20.0, 10.0), 0.0, -1.0))
+    assertRejected(
+      canvas.path(Path(Vec(0.0, 0.0)).lineTo(Vec(Double.NaN, 0.0)))
+    )
     assert(canvas.state == initial && canvas.lines.isEmpty)
   }
 
@@ -129,6 +135,9 @@ class CanvasSuite extends munit.FunSuite:
       state.copy(cap = cap)
     protected def setStrokeJoin(join: StrokeJoin): Unit = state =
       state.copy(join = join)
+    protected def drawPath(path: Path): Unit = fail(
+      "invalid path reached the renderer"
+    )
     protected def clearSurface(color: Color): Unit = ()
     protected def drawRect(position: Vec[2], size: Vec[2]): Unit = ()
     protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit = fail(

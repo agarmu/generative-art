@@ -293,6 +293,7 @@ private[genart] class TestProvider extends SketchProvider:
     protected def setStrokeWeight(weight: Double): Unit = ()
     protected def setStrokeCap(cap: StrokeCap): Unit = ()
     protected def setStrokeJoin(join: StrokeJoin): Unit = ()
+    protected def drawPath(path: Path): Unit = ()
     protected def clearSurface(color: Color): Unit = ()
     protected def drawRect(position: Vec[2], size: Vec[2]): Unit = ()
     protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit = ()

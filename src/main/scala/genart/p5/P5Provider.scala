@@ -5,6 +5,7 @@ import genart.{
   Canvas,
   Color,
   Image,
+  Path,
   StrokeCap,
   StrokeJoin,
   Sketch,
@@ -43,6 +44,9 @@ final class P5Provider private[p5] (
     onClose: () => Unit
 ) extends SketchProvider:
   private var closed = false
+  private var fillEnabled = true
+  private var strokeEnabled = true
+  private var savedPaint = List.empty[(Boolean, Boolean)]
 
   val canvas: Canvas = new Canvas:
     def width: Int = instance.width
@@ -69,12 +73,18 @@ final class P5Provider private[p5] (
 
     protected def setStrokeColor(color: Color): Unit =
       instance.stroke(color.red, color.green, color.blue, color.alpha)
+      strokeEnabled = true
 
     protected def setFillColor(color: Color): Unit =
       instance.fill(color.red, color.green, color.blue, color.alpha)
+      fillEnabled = true
 
-    protected def disableStroke(): Unit = instance.noStroke()
-    protected def disableFill(): Unit = instance.noFill()
+    protected def disableStroke(): Unit =
+      instance.noStroke()
+      strokeEnabled = false
+    protected def disableFill(): Unit =
+      instance.noFill()
+      fillEnabled = false
     protected def setStrokeWeight(weight: Double): Unit =
       instance.strokeWeight(weight)
 
@@ -111,11 +121,53 @@ final class P5Provider private[p5] (
     protected def translateBy(offset: Vec[2]): Unit =
       instance.translate(offset.x, offset.y)
 
+    protected def drawPath(path: Path): Unit =
+      val shape = new dom.Path2D()
+      shape.moveTo(path.start.x, path.start.y)
+      path.segments.foreach {
+        case Path.Segment.Line(to)               => shape.lineTo(to.x, to.y)
+        case Path.Segment.Quadratic(control, to) =>
+          shape.quadraticCurveTo(control.x, control.y, to.x, to.y)
+        case Path.Segment.Cubic(control1, control2, to) =>
+          shape.bezierCurveTo(
+            control1.x,
+            control1.y,
+            control2.x,
+            control2.y,
+            to.x,
+            to.y
+          )
+        case Path.Segment.Arc(center, size, start, sweep) =>
+          if sweep > 0.0 && size.x > 0.0 && size.y > 0.0 then
+            val angle = Path.normalizedAngle(start)
+            shape.ellipse(
+              center.x,
+              center.y,
+              size.x / 2.0,
+              size.y / 2.0,
+              0.0,
+              angle,
+              angle + sweep
+            )
+      }
+      if path.closed then shape.closePath()
+      if fillEnabled then instance.drawingContext.fill(shape)
+      if strokeEnabled then instance.drawingContext.stroke(shape)
+
     protected def rotateBy(radians: Double): Unit = instance.rotate(radians)
     protected def scaleBy(factors: Vec[2]): Unit =
       instance.scale(factors.x, factors.y)
-    protected def pushState(): Unit = instance.push()
-    protected def popState(): Unit = instance.pop()
+    protected def pushState(): Unit =
+      instance.push()
+      savedPaint = (fillEnabled, strokeEnabled) :: savedPaint
+
+    protected def popState(): Unit =
+      try instance.pop()
+      finally
+        val (fill, stroke) = savedPaint.head
+        savedPaint = savedPaint.tail
+        fillEnabled = fill
+        strokeEnabled = stroke
 
   def initialize(frameRate: Double): Unit =
     require(!closed, "provider is closed")

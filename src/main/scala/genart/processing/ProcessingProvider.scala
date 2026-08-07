@@ -5,6 +5,7 @@ import genart.{
   Canvas,
   Color,
   Image,
+  Path,
   StrokeCap,
   StrokeJoin,
   Sketch,
@@ -16,6 +17,7 @@ import genart.lib.runtime.RunConfig
 import processing.awt.PGraphicsJava2D
 import processing.core.{PApplet, PConstants, PGraphics}
 import java.awt.{Component, EventQueue}
+import java.awt.geom.{Arc2D, Path2D}
 import javax.swing.SwingUtilities
 
 object ProcessingProvider:
@@ -145,6 +147,53 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
 
     protected def translateBy(offset: Vec[2]): Unit =
       graphics.translate(native(offset.x), native(offset.y))
+
+    protected def drawPath(path: Path): Unit =
+      Path.points(path).foreach { point =>
+        native(point.x)
+        native(point.y)
+      }
+      val shape = new Path2D.Double(Path2D.WIND_NON_ZERO)
+      shape.moveTo(path.start.x, path.start.y)
+      path.segments.foreach {
+        case Path.Segment.Line(to)               => shape.lineTo(to.x, to.y)
+        case Path.Segment.Quadratic(control, to) =>
+          shape.quadTo(control.x, control.y, to.x, to.y)
+        case Path.Segment.Cubic(control1, control2, to) =>
+          shape.curveTo(
+            control1.x,
+            control1.y,
+            control2.x,
+            control2.y,
+            to.x,
+            to.y
+          )
+        case Path.Segment.Arc(center, size, start, sweep) =>
+          if sweep > 0.0 && size.x > 0.0 && size.y > 0.0 then
+            shape.append(
+              new Arc2D.Double(
+                center.x - size.x / 2.0,
+                center.y - size.y / 2.0,
+                size.x,
+                size.y,
+                -math.toDegrees(Path.normalizedAngle(start)),
+                -math.toDegrees(sweep),
+                Arc2D.OPEN
+              ),
+              true
+            )
+      }
+      if path.closed then shape.closePath()
+      val context = graphics.asInstanceOf[PGraphicsJava2D].g2
+      val paint = context.getPaint
+      try
+        if graphics.fill then
+          context.setColor(new java.awt.Color(graphics.fillColor, true))
+          context.fill(shape)
+        if graphics.stroke then
+          context.setColor(new java.awt.Color(graphics.strokeColor, true))
+          context.draw(shape)
+      finally context.setPaint(paint)
 
     protected def rotateBy(radians: Double): Unit =
       graphics.rotate(native(radians))
