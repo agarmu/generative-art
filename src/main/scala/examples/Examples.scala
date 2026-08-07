@@ -12,6 +12,7 @@ private[examples] object Examples:
   val all: Vector[Example] = Vector(
     Example("Basic Shapes", "BasicShapes", BasicShapes),
     Example("Color Walk", "ColorWalk", ColorWalk),
+    Example("Paths", "Paths", Paths),
     Example("Polygons", "Polygons", Polygons)
   ).sortBy(_.name)
 
