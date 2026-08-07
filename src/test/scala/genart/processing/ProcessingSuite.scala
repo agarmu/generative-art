@@ -108,7 +108,7 @@ class ProcessingSuite extends munit.FunSuite:
 
   rendering.test(
     "nested scopes restore native style and transforms after failure"
-  ) { case (_, provider) =>
+  ) { case (applet, provider) =>
     provider.initialize(60.0)
     val canvas = provider.canvas
     canvas.background(black)
@@ -137,6 +137,12 @@ class ProcessingSuite extends munit.FunSuite:
       }
     }
     assert(thrown eq failure)
+    def nested(depth: Int): Unit = canvas.scoped {
+      canvas.fill(blue)
+      if depth > 0 then nested(depth - 1)
+    }
+    intercept[RuntimeException](nested(32))
+    assertEquals(applet.g.fillColor, 0xffff0000)
     canvas.rect(Vec(0.0, 0.0), Vec(8.0, 8.0))
     canvas.line(Vec(48.0, 48.0), Vec(56.0, 48.0))
     val image = canvas.snapshot()

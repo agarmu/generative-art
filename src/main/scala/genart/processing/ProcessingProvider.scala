@@ -137,8 +137,17 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
     protected def scaleBy(factors: Vec[2]): Unit =
       graphics.scale(native(factors.x), native(factors.y))
 
-    protected def pushState(): Unit = graphics.push()
-    protected def popState(): Unit = graphics.pop()
+    protected def pushState(): Unit =
+      graphics.pushStyle()
+      try graphics.pushMatrix()
+      catch
+        case error: Throwable =>
+          graphics.popStyle()
+          throw error
+
+    protected def popState(): Unit =
+      try graphics.popStyle()
+      finally graphics.popMatrix()
 
   def initialize(frameRate: Double): Unit =
     require(!closed, "provider is closed")
