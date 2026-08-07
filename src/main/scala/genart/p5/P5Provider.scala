@@ -5,6 +5,8 @@ import genart.{
   Canvas,
   Color,
   Image,
+  StrokeCap,
+  StrokeJoin,
   Sketch,
   SketchContext,
   SketchHandle,
@@ -76,6 +78,18 @@ final class P5Provider private[p5] (
     protected def setStrokeWeight(weight: Double): Unit =
       instance.strokeWeight(weight)
 
+    protected def setStrokeCap(cap: StrokeCap): Unit =
+      instance.strokeCap(cap match
+        case StrokeCap.Butt   => instance.SQUARE
+        case StrokeCap.Round  => instance.ROUND
+        case StrokeCap.Square => instance.PROJECT)
+
+    protected def setStrokeJoin(join: StrokeJoin): Unit =
+      instance.strokeJoin(join match
+        case StrokeJoin.Miter => instance.MITER
+        case StrokeJoin.Round => instance.ROUND
+        case StrokeJoin.Bevel => instance.BEVEL)
+
     protected def clearSurface(color: Color): Unit =
       instance.background(color.red, color.green, color.blue)
 
@@ -96,6 +110,7 @@ final class P5Provider private[p5] (
 
     protected def translateBy(offset: Vec[2]): Unit =
       instance.translate(offset.x, offset.y)
+
     protected def rotateBy(radians: Double): Unit = instance.rotate(radians)
     protected def scaleBy(factors: Vec[2]): Unit =
       instance.scale(factors.x, factors.y)
@@ -122,6 +137,8 @@ final class P5Provider private[p5] (
     instance.stroke(0.0, 0.0, 0.0, 1.0)
     instance.fill(1.0, 1.0, 1.0, 1.0)
     instance.strokeWeight(1.0)
+    canvas.strokeCap(StrokeCap.Round)
+    canvas.strokeJoin(StrokeJoin.Miter)
     instance.resetMatrix()
 
   def beginFrame(): Unit = instance.resetMatrix()

@@ -5,6 +5,8 @@ import genart.{
   Canvas,
   Color,
   Image,
+  StrokeCap,
+  StrokeJoin,
   Sketch,
   SketchContext,
   SketchHandle,
@@ -80,6 +82,18 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
     protected def disableFill(): Unit = graphics.noFill()
     protected def setStrokeWeight(weight: Double): Unit =
       graphics.strokeWeight(native(weight))
+
+    protected def setStrokeCap(cap: StrokeCap): Unit =
+      graphics.strokeCap(cap match
+        case StrokeCap.Butt   => PConstants.SQUARE
+        case StrokeCap.Round  => PConstants.ROUND
+        case StrokeCap.Square => PConstants.PROJECT)
+
+    protected def setStrokeJoin(join: StrokeJoin): Unit =
+      graphics.strokeJoin(join match
+        case StrokeJoin.Miter => PConstants.MITER
+        case StrokeJoin.Round => PConstants.ROUND
+        case StrokeJoin.Bevel => PConstants.BEVEL)
 
     protected def clearSurface(color: Color): Unit =
       graphics.background(
@@ -170,6 +184,8 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
     graphics.stroke(0.0f, 0.0f, 0.0f, 1.0f)
     graphics.fill(1.0f, 1.0f, 1.0f, 1.0f)
     graphics.strokeWeight(1.0f)
+    canvas.strokeCap(StrokeCap.Round)
+    canvas.strokeJoin(StrokeJoin.Miter)
     graphics.resetMatrix()
 
   def beginFrame(): Unit = graphics.resetMatrix()

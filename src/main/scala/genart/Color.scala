@@ -86,11 +86,3 @@ object Color:
       case 3 => new Color(p, q, brightness, alpha)
       case 4 => new Color(t, p, brightness, alpha)
       case _ => new Color(brightness, p, q, alpha)
-
-final case class Style(
-    stroke: Option[Color],
-    fill: Option[Color],
-    strokeWeight: Double
-):
-  requireFinite(strokeWeight, "strokeWeight")
-  require(strokeWeight >= 0.0, "strokeWeight must be nonnegative")

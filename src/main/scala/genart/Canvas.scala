@@ -13,6 +13,8 @@ trait Canvas:
   final def fill(color: Color): Unit = setFillColor(color)
   final def noStroke(): Unit = disableStroke()
   final def noFill(): Unit = disableFill()
+  final def strokeCap(cap: StrokeCap): Unit = setStrokeCap(cap)
+  final def strokeJoin(join: StrokeJoin): Unit = setStrokeJoin(join)
 
   final def strokeWeight(weight: Double): Unit =
     requireFinite(weight, "strokeWeight")
@@ -23,6 +25,8 @@ trait Canvas:
     value.stroke.fold(noStroke())(stroke)
     value.fill.fold(noFill())(fill)
     strokeWeight(value.strokeWeight)
+    strokeCap(value.strokeCap)
+    strokeJoin(value.strokeJoin)
 
   final def background(color: Color): Unit =
     require(color.alpha == 1.0, "background must be opaque")
@@ -88,6 +92,8 @@ trait Canvas:
   protected def disableStroke(): Unit
   protected def disableFill(): Unit
   protected def setStrokeWeight(weight: Double): Unit
+  protected def setStrokeCap(cap: StrokeCap): Unit
+  protected def setStrokeJoin(join: StrokeJoin): Unit
   protected def clearSurface(color: Color): Unit
   protected def drawRect(position: Vec[2], size: Vec[2]): Unit
   protected def drawLine(from: Vec[2], to: Vec[2]): Unit

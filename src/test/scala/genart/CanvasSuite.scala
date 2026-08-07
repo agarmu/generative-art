@@ -11,12 +11,14 @@ class CanvasSuite extends munit.FunSuite:
     val canvas = new RecordingCanvas
     val red = Color.rgb(1.0, 0.0, 0.0)
     val blue = Color.rgb(0.0, 0.0, 1.0)
-    canvas.style(Style(Some(red), None, 2.0))
+    canvas.style(Style(Some(red), None, 2.0, StrokeCap.Butt, StrokeJoin.Bevel))
     canvas.translate(Vec(4.0, 5.0))
     val initial = canvas.state
     val failure = new RuntimeException("drawing")
     val result = canvas.scoped {
-      canvas.style(Style(None, Some(blue), 3.0))
+      canvas.style(
+        Style(None, Some(blue), 3.0, StrokeCap.Square, StrokeJoin.Round)
+      )
       canvas.rotate(0.5)
       val outer = canvas.state
       val thrown = Try(canvas.scoped {
@@ -102,6 +104,8 @@ class CanvasSuite extends munit.FunSuite:
       stroke: Option[Color] = None,
       fill: Option[Color] = None,
       weight: Double = 1.0,
+      cap: StrokeCap = StrokeCap.Round,
+      join: StrokeJoin = StrokeJoin.Miter,
       transforms: Vector[(String, Double, Double)] = Vector.empty
   )
 
@@ -121,6 +125,10 @@ class CanvasSuite extends munit.FunSuite:
     protected def disableFill(): Unit = state = state.copy(fill = None)
     protected def setStrokeWeight(weight: Double): Unit = state =
       state.copy(weight = weight)
+    protected def setStrokeCap(cap: StrokeCap): Unit = state =
+      state.copy(cap = cap)
+    protected def setStrokeJoin(join: StrokeJoin): Unit = state =
+      state.copy(join = join)
     protected def clearSurface(color: Color): Unit = ()
     protected def drawRect(position: Vec[2], size: Vec[2]): Unit = ()
     protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit = fail(

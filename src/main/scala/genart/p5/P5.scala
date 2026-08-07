@@ -19,6 +19,11 @@ private[p5] class P5(sketch: js.Function1[P5, Unit], container: dom.Element)
   val CORNER: String = js.native
   val CENTER: String = js.native
   val RADIANS: String = js.native
+  val SQUARE: String = js.native
+  val PROJECT: String = js.native
+  val ROUND: String = js.native
+  val MITER: String = js.native
+  val BEVEL: String = js.native
 
   def createCanvas(width: Int, height: Int): js.Any = js.native
   def resizeCanvas(width: Int, height: Int, noRedraw: Boolean): Unit = js.native
@@ -36,6 +41,8 @@ private[p5] class P5(sketch: js.Function1[P5, Unit], container: dom.Element)
   def noStroke(): Unit = js.native
   def noFill(): Unit = js.native
   def strokeWeight(weight: Double): Unit = js.native
+  def strokeCap(cap: String): Unit = js.native
+  def strokeJoin(join: String): Unit = js.native
   def background(red: Double, green: Double, blue: Double): Unit = js.native
   def rect(x: Double, y: Double, width: Double, height: Double): Unit =
     js.native

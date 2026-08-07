@@ -1,6 +1,6 @@
 package genart.processing
 
-import genart.{Color, Frame, Sketch, Step}
+import genart.{Color, Frame, Sketch, Step, StrokeCap, StrokeJoin}
 import genart.lib.math.Vec
 import genart.lib.random.Seed
 import genart.lib.runtime.{RunConfig, SketchSession}
@@ -46,10 +46,14 @@ class ProcessingSuite extends munit.FunSuite:
       applet.g.noFill()
       applet.g.noStroke()
       applet.g.rectMode(PConstants.CENTER)
+      applet.g.strokeCap(PConstants.PROJECT)
+      applet.g.strokeJoin(PConstants.BEVEL)
       provider.initialize(60.0)
       assert(applet.g.fill && applet.g.fillColor == 0xffffffff)
       assert(applet.g.stroke && applet.g.strokeColor == 0xff000000)
       assertEquals(applet.g.strokeWeight, 1.0f)
+      assertEquals(applet.g.strokeCap, PConstants.ROUND)
+      assertEquals(applet.g.strokeJoin, PConstants.MITER)
       provider.canvas.noStroke()
       provider.canvas.fill(red)
       provider.canvas.rect(Vec(0.0, 0.0), Vec(8.0, 8.0))
@@ -112,6 +116,8 @@ class ProcessingSuite extends munit.FunSuite:
     provider.initialize(60.0)
     val canvas = provider.canvas
     canvas.background(black)
+    canvas.strokeCap(StrokeCap.Butt)
+    canvas.strokeJoin(StrokeJoin.Bevel)
     canvas.noStroke()
     canvas.fill(red)
     val result = canvas.scoped {
@@ -133,10 +139,14 @@ class ProcessingSuite extends munit.FunSuite:
         canvas.translate(Vec(40.0, 40.0))
         canvas.noFill()
         canvas.stroke(blue)
+        canvas.strokeCap(StrokeCap.Square)
+        canvas.strokeJoin(StrokeJoin.Round)
         throw failure
       }
     }
     assert(thrown eq failure)
+    assertEquals(applet.g.strokeCap, PConstants.SQUARE)
+    assertEquals(applet.g.strokeJoin, PConstants.BEVEL)
     def nested(depth: Int): Unit = canvas.scoped {
       canvas.fill(blue)
       if depth > 0 then nested(depth - 1)
