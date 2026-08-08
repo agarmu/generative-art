@@ -9,6 +9,7 @@ final case class SketchContext private[genart] (canvas: Canvas, seed: Seed)
 trait Sketch:
   def setup(): Unit = ()
   def update(step: Step): Unit = ()
+  def pointer(event: PointerEvent): Unit = ()
   def draw(frame: Frame): Unit
   def resized(): Unit = ()
   def dispose(): Unit = ()

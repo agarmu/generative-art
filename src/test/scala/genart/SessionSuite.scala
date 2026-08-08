@@ -137,6 +137,28 @@ class SessionSuite extends munit.FunSuite:
     replaySession.stop()
   }
 
+  test(
+    "pointer events precede updates and are ignored while suspended or stopped"
+  ) {
+    val fixture = new RecordingSession
+    import fixture.*
+    val press = PointerEvent.Pressed(Vec(20.0, 30.0), PointerButton.Primary)
+    val release = PointerEvent.Released(Vec(40.0, 50.0), PointerButton.Primary)
+    session.pointer(press)
+    session.replay(1)
+    assertEquals(
+      provider.events.takeRight(4).toVector,
+      Vector("pointer", "update", "beginFrame", "draw")
+    )
+    session.suspend()
+    session.pointer(PointerEvent.Moved(Vec(0.0, 0.0)))
+    session.resume()
+    session.pointer(release)
+    session.stop()
+    session.pointer(press)
+    assertEquals(pointers.toVector, Vector(press, release))
+  }
+
   test("setup failures dispose the sketch and close the provider") {
     val setupProvider = new TestProvider
     val setupFailure = new RuntimeException("setup")
@@ -260,12 +282,16 @@ class SessionSuite extends munit.FunSuite:
     val provider = new TestProvider
     val steps = ArrayBuffer.empty[Step]
     val frames = ArrayBuffer.empty[Frame]
+    val pointers = ArrayBuffer.empty[PointerEvent]
     val session = SketchSession.start(provider, RunConfig(seed)) { context =>
       assert(context.seed == seed)
       assert(context.canvas.width == 640 && context.canvas.height == 480)
       provider.events += "construct"
       new Sketch:
         override def setup(): Unit = provider.events += "setup"
+        override def pointer(event: PointerEvent): Unit =
+          pointers += event
+          provider.events += "pointer"
         override def update(step: Step): Unit =
           steps += step
           provider.events += "update"
