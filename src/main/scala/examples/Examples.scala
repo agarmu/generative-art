@@ -10,11 +10,11 @@ private[examples] object Examples:
   )
 
   val all: Vector[Example] = Vector(
-    Example("Basic Shapes", "BasicShapes", BasicShapes),
-    Example("Color Walk", "ColorWalk", ColorWalk),
-    Example("Paths", "Paths", Paths),
-    Example("Strokes", "Strokes", Strokes),
-    Example("Polygons", "Polygons", Polygons)
+    Example("Basic Shapes", "basic", BasicShapes),
+    Example("Color Walk", "walk", ColorWalk),
+    Example("Paths", "paths", Paths),
+    Example("Strokes", "strokes", Strokes),
+    Example("Polygons", "polygons", Polygons)
   ).sortBy(_.name)
 
   val idents: Vector[String] = all.map(_.ident)
