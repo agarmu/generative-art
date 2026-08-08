@@ -13,6 +13,7 @@ private[examples] object Examples:
     Example("Basic Shapes", "BasicShapes", BasicShapes),
     Example("Color Walk", "ColorWalk", ColorWalk),
     Example("Paths", "Paths", Paths),
+    Example("Strokes", "Strokes", Strokes),
     Example("Polygons", "Polygons", Polygons)
   ).sortBy(_.name)
 
