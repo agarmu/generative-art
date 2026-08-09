@@ -1,6 +1,16 @@
 package genart.processing
 
-import genart.{ArcMode, Color, Frame, Path, Sketch, Step, StrokeCap, StrokeJoin}
+import genart.{
+  ArcMode,
+  Color,
+  Frame,
+  Image,
+  Path,
+  Sketch,
+  Step,
+  StrokeCap,
+  StrokeJoin
+}
 import genart.lib.math.Vec
 import genart.lib.random.Seed
 import genart.lib.runtime.{RunConfig, SketchSession}
@@ -399,6 +409,41 @@ class ProcessingSuite extends munit.FunSuite:
       assertEqualsDouble(image(4, 4).alpha, 0.5, 1.0 / 255.0)
   }
 
+  rendering.test(
+    "images crop, scale and blend without changing drawing state or uploading twice"
+  ) { case (_, provider) =>
+    provider.initialize(60.0)
+    val canvas = provider.canvas
+    var reads = 0
+    val source = new Image(4, 2):
+      protected def read(x: Int, y: Int): Color =
+        reads += 1
+        if x < 2 then green else red.withAlpha(0.5)
+    canvas.background(blue)
+    canvas.noStroke()
+    canvas.fill(green)
+    canvas.translate(Vec(8.0, 8.0))
+    canvas.image(source, Vec(0.0, 0.0))
+    canvas.image(
+      source,
+      Vec(8.0, 0.0),
+      Vec(16.0, 16.0),
+      Vec(2.0, 0.0),
+      Vec(2.0, 2.0)
+    )
+    canvas.rect(Vec(0.0, 24.0), Vec(8.0, 8.0))
+    val result = canvas.snapshot()
+    assertEquals(reads, 8)
+    assertEquals(result(8, 8), green)
+    assertEqualsDouble(result(24, 16).red, 0.5, 1.0 / 255.0)
+    assertEqualsDouble(result(24, 16).blue, 0.5, 1.0 / 255.0)
+    assertEquals(result(4, 16), blue)
+    assertEquals(result(12, 36), green)
+    provider.resize(80, 48)
+    canvas.image(result, Vec(0.0, 0.0))
+    assertEquals(canvas.snapshot()(12, 36), green)
+  }
+
   denseRendering.test(
     "snapshot dimensions and coordinates use physical pixels"
   ) { case (_, provider) =>
@@ -414,4 +459,13 @@ class ProcessingSuite extends munit.FunSuite:
     assertEquals(image(1, 1), red)
     assertEquals(image(24, 24), blue)
     assertEquals(image(126, 126), red)
+    canvas.background(black)
+    canvas.image(
+      image,
+      Vec(0.0, 0.0),
+      Vec(16.0, 16.0),
+      Vec(20.0, 20.0),
+      Vec(16.0, 16.0)
+    )
+    assertEquals(canvas.snapshot()(16, 16), blue)
   }

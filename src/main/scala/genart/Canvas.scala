@@ -63,6 +63,39 @@ trait Canvas:
     validatePoint(to)
     drawLine(from, to)
 
+  final def image(source: Image, position: Vec[2]): Unit =
+    image(source, position, Vec(source.width.toDouble, source.height.toDouble))
+
+  final def image(source: Image, position: Vec[2], size: Vec[2]): Unit =
+    image(
+      source,
+      position,
+      size,
+      Vec(0.0, 0.0),
+      Vec(source.width.toDouble, source.height.toDouble)
+    )
+
+  final def image(
+      source: Image,
+      position: Vec[2],
+      size: Vec[2],
+      sourcePosition: Vec[2],
+      sourceSize: Vec[2]
+  ): Unit =
+    validatePoint(position)
+    validateSize(size)
+    validatePoint(sourcePosition)
+    validateSize(sourceSize)
+    require(
+      sourcePosition.x >= 0.0 && sourcePosition.y >= 0.0 &&
+        sourcePosition.x <= source.width && sourcePosition.y <= source.height &&
+        sourceSize.x <= source.width - sourcePosition.x &&
+        sourceSize.y <= source.height - sourcePosition.y,
+      "source region must fit inside the image"
+    )
+    if size.x > 0.0 && size.y > 0.0 && sourceSize.x > 0.0 && sourceSize.y > 0.0
+    then drawImage(source, position, size, sourcePosition, sourceSize)
+
   final def arc(
       center: Vec[2],
       size: Vec[2],
@@ -125,6 +158,13 @@ trait Canvas:
   protected def drawTriangle(a: Vec[2], b: Vec[2], c: Vec[2]): Unit
   protected def drawQuad(a: Vec[2], b: Vec[2], c: Vec[2], d: Vec[2]): Unit
   protected def drawPath(path: Path): Unit
+  protected def drawImage(
+      source: Image,
+      position: Vec[2],
+      size: Vec[2],
+      sourcePosition: Vec[2],
+      sourceSize: Vec[2]
+  ): Unit
   protected def translateBy(offset: Vec[2]): Unit
   protected def rotateBy(radians: Double): Unit
   protected def scaleBy(factors: Vec[2]): Unit

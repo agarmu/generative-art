@@ -66,6 +66,19 @@ class CanvasSuite extends munit.FunSuite:
     )
     assertRejected(canvas.circle(Vec(0.0, 0.0), -1.0))
     assertRejected(canvas.circle(Vec(0.0, 0.0), Double.NaN))
+    val image = new Image(2, 2):
+      protected def read(x: Int, y: Int): Color = red
+    assertRejected(canvas.image(image, Vec(0.0, 0.0), Vec(-1.0, 2.0)))
+    assertRejected(
+      canvas.image(
+        image,
+        Vec(0.0, 0.0),
+        Vec(2.0, 2.0),
+        Vec(1.0, 0.0),
+        Vec(2.0, 2.0)
+      )
+    )
+    canvas.image(image, Vec(0.0, 0.0), Vec(0.0, 2.0))
     assertRejected(
       canvas.triangle(Vec(0.0, 0.0), Vec(1.0, 0.0), Vec(Double.NaN, 1.0))
     )
@@ -138,6 +151,13 @@ class CanvasSuite extends munit.FunSuite:
     protected def drawPath(path: Path): Unit = fail(
       "invalid path reached the renderer"
     )
+    protected def drawImage(
+        source: Image,
+        position: Vec[2],
+        size: Vec[2],
+        sourcePosition: Vec[2],
+        sourceSize: Vec[2]
+    ): Unit = fail("invalid image draw reached the renderer")
     protected def clearSurface(color: Color): Unit = ()
     protected def drawRect(position: Vec[2], size: Vec[2]): Unit = ()
     protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit = fail(

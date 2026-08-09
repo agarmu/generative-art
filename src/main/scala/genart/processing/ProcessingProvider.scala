@@ -16,8 +16,10 @@ import genart.{
 import genart.lib.runtime.RunConfig
 import processing.awt.PGraphicsJava2D
 import processing.core.{PApplet, PConstants, PGraphics}
-import java.awt.{Component, EventQueue}
-import java.awt.geom.{Arc2D, Path2D}
+import java.awt.{Component, EventQueue, RenderingHints}
+import java.awt.geom.{AffineTransform, Arc2D, Path2D, Rectangle2D}
+import java.awt.image.BufferedImage
+import java.util.WeakHashMap
 import javax.swing.SwingUtilities
 
 object ProcessingProvider:
@@ -42,6 +44,7 @@ object ProcessingProvider:
 
 final class ProcessingProvider(applet: PApplet) extends SketchProvider:
   private var closed = false
+  private val imageCache = new WeakHashMap[Image, BufferedImage]
   private var renderThread = Option.empty[Thread]
 
   private def graphics: PGraphics = applet.g
@@ -52,17 +55,7 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
 
     def snapshot(): Image =
       require(!closed, "provider is closed")
-      val captured = graphics.get()
-      val pixels = captured.pixels
-      new Image(captured.pixelWidth, captured.pixelHeight):
-        protected def read(x: Int, y: Int): Color =
-          val argb = pixels(y * this.width + x)
-          Color.rgb(
-            ((argb >>> 16) & 255) / 255.0,
-            ((argb >>> 8) & 255) / 255.0,
-            (argb & 255) / 255.0,
-            ((argb >>> 24) & 255) / 255.0
-          )
+      new ProcessingImage(graphics.get().getNative.asInstanceOf[BufferedImage])
 
     protected def setStrokeColor(color: Color): Unit =
       graphics.stroke(
@@ -195,6 +188,47 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
           context.draw(shape)
       finally context.setPaint(paint)
 
+    protected def drawImage(
+        source: Image,
+        position: Vec[2],
+        size: Vec[2],
+        sourcePosition: Vec[2],
+        sourceSize: Vec[2]
+    ): Unit =
+      require(!closed, "provider is closed")
+      native(position.x)
+      native(position.y)
+      native(size.x)
+      native(size.y)
+      val bitmap = source match
+        case image: ProcessingImage => image.bitmap
+        case _                      =>
+          Option(imageCache.get(source)).getOrElse {
+            val uploaded = ProcessingImage.upload(source)
+            imageCache.put(source, uploaded)
+            uploaded
+          }
+      val drawing = graphics
+        .asInstanceOf[PGraphicsJava2D]
+        .g2
+        .create()
+        .asInstanceOf[java.awt.Graphics2D]
+      try
+        drawing.setRenderingHint(
+          RenderingHints.KEY_INTERPOLATION,
+          RenderingHints.VALUE_INTERPOLATION_BILINEAR
+        )
+        drawing.clip(
+          new Rectangle2D.Double(position.x, position.y, size.x, size.y)
+        )
+        val transform = new AffineTransform
+        transform.translate(position.x, position.y)
+        transform.scale(size.x / sourceSize.x, size.y / sourceSize.y)
+        transform.translate(-sourcePosition.x, -sourcePosition.y)
+        drawing.drawImage(bitmap, transform, null)
+        ()
+      finally drawing.dispose()
+
     protected def rotateBy(radians: Double): Unit =
       graphics.rotate(native(radians))
     protected def scaleBy(factors: Vec[2]): Unit =
@@ -254,6 +288,7 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
   def close(): Unit =
     if !closed then
       closed = true
+      imageCache.clear()
       val surface = applet.getSurface
       if surface != null then
         applet.noLoop()
