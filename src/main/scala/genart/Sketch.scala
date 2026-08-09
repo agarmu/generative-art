@@ -10,6 +10,7 @@ trait Sketch:
   def setup(): Unit = ()
   def update(step: Step): Unit = ()
   def pointer(event: PointerEvent): Unit = ()
+  def key(event: KeyEvent): Unit = ()
   def draw(frame: Frame): Unit
   def resized(): Unit = ()
   def dispose(): Unit = ()

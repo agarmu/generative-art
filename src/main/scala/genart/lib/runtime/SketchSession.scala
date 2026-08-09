@@ -1,6 +1,6 @@
 package genart.lib.runtime
 
-import genart.{PointerEvent, Sketch, SketchContext, SketchProvider}
+import genart.{KeyEvent, PointerEvent, Sketch, SketchContext, SketchProvider}
 import genart.lib.requireFinite
 import genart.lib.random.Seed
 import genart.lib.time.{ClockAdvance, ClockConfig, FixedClock}
@@ -53,6 +53,9 @@ final class SketchSession private (
 
   def pointer(event: PointerEvent): Unit =
     if !isStopped && !isSuspended then dispatch(sketch.pointer(event))
+
+  def key(event: KeyEvent): Unit =
+    if !isStopped && !isSuspended then dispatch(sketch.key(event))
 
   def suspend(): Unit =
     if !isStopped then state = state.copy(suspended = true, lastTime = None)

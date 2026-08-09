@@ -1,6 +1,6 @@
 package genart.p5
 
-import genart.{PointerEvent, Sketch, SketchContext, SketchHandle}
+import genart.{KeyEvent, PointerEvent, Sketch, SketchContext, SketchHandle}
 import genart.lib.runtime.{RunConfig, SketchSession}
 import org.scalajs.dom
 import scala.scalajs.js
@@ -14,7 +14,8 @@ private final class P5Host(
   private var session = Option.empty[SketchSession]
   private var observer = Option.empty[dom.ResizeObserver]
   private var input = Option.empty[P5PointerInput]
-  private var pointerEvents = Vector.empty[PointerEvent]
+  private var keyboard = Option.empty[P5KeyboardInput]
+  private var inputEvents = Vector.empty[PointerEvent | KeyEvent]
   private var starting = false
   private var stopRequested = false
   private var closed = false
@@ -23,7 +24,8 @@ private final class P5Host(
     session.foreach { active =>
       if dom.document.hidden then
         input.foreach(_.cancel())
-        pointerEvents = Vector(PointerEvent.Cancelled)
+        keyboard.foreach(_.cancel())
+        inputEvents = Vector(PointerEvent.Cancelled, KeyEvent.Cancelled)
         active.suspend()
       else active.resume()
     }
@@ -36,9 +38,12 @@ private final class P5Host(
         if !stopRequested then
           session.foreach { active =>
             if !active.isSuspended then
-              val events = pointerEvents
-              pointerEvents = Vector.empty
-              events.foreach(active.pointer)
+              val events = inputEvents
+              inputEvents = Vector.empty
+              events.foreach {
+                case event: PointerEvent => active.pointer(event)
+                case event: KeyEvent     => active.key(event)
+              }
               active.frame(dom.window.performance.now() / 1000.0)
           }
     new P5(bind, container)
@@ -65,10 +70,16 @@ private final class P5Host(
         else
           val pointerInput = new P5PointerInput(
             native,
-            event => if !stopRequested then pointerEvents :+= event
+            event => if !stopRequested then inputEvents :+= event
           )
           input = Some(pointerInput)
           pointerInput.start()
+          val keyboardInput = new P5KeyboardInput(
+            native.canvas,
+            event => if !stopRequested then inputEvents :+= event
+          )
+          keyboard = Some(keyboardInput)
+          keyboardInput.start()
           val resizeObserver = new dom.ResizeObserver((_, _) => resize())
           observer = Some(resizeObserver)
           resizeObserver.observe(container)
@@ -83,7 +94,9 @@ private final class P5Host(
         val dimensions = instance.map(native => (native.width, native.height))
         if width > 0 && height > 0 && !dimensions.contains((width, height)) then
           input.foreach(_.cancel())
-          pointerEvents = Vector(PointerEvent.Cancelled)
+          inputEvents = inputEvents.collect { case event: KeyEvent =>
+            event
+          } :+ PointerEvent.Cancelled
           active.resize(width, height)
       }
 
@@ -91,8 +104,9 @@ private final class P5Host(
     if !closed then
       closed = true
       stopRequested = true
-      pointerEvents = Vector.empty
+      inputEvents = Vector.empty
       input.foreach(_.close())
+      keyboard.foreach(_.close())
       observer.foreach(_.disconnect())
       dom.document.removeEventListener("visibilitychange", visibilityChanged)
       instance.foreach { native =>

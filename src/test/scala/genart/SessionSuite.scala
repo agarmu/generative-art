@@ -138,25 +138,34 @@ class SessionSuite extends munit.FunSuite:
   }
 
   test(
-    "pointer events precede updates and are ignored while suspended or stopped"
+    "input events precede updates and are ignored while suspended or stopped"
   ) {
     val fixture = new RecordingSession
     import fixture.*
     val press = PointerEvent.Pressed(Vec(20.0, 30.0), PointerButton.Primary)
     val release = PointerEvent.Released(Vec(40.0, 50.0), PointerButton.Primary)
     session.pointer(press)
+    val key = KeyEvent.Pressed(Key.Character("r"))
+    session.key(key)
     session.replay(1)
     assertEquals(
-      provider.events.takeRight(4).toVector,
-      Vector("pointer", "update", "beginFrame", "draw")
+      provider.events.takeRight(5).toVector,
+      Vector("pointer", "key", "update", "beginFrame", "draw")
     )
     session.suspend()
     session.pointer(PointerEvent.Moved(Vec(0.0, 0.0)))
+    session.key(KeyEvent.Cancelled)
     session.resume()
     session.pointer(release)
+    session.key(KeyEvent.Released(Key.Character("r")))
     session.stop()
     session.pointer(press)
+    session.key(key)
     assertEquals(pointers.toVector, Vector(press, release))
+    assertEquals(
+      keys.toVector,
+      Vector(key, KeyEvent.Released(Key.Character("r")))
+    )
   }
 
   test("setup failures dispose the sketch and close the provider") {
@@ -283,6 +292,7 @@ class SessionSuite extends munit.FunSuite:
     val steps = ArrayBuffer.empty[Step]
     val frames = ArrayBuffer.empty[Frame]
     val pointers = ArrayBuffer.empty[PointerEvent]
+    val keys = ArrayBuffer.empty[KeyEvent]
     val session = SketchSession.start(provider, RunConfig(seed)) { context =>
       assert(context.seed == seed)
       assert(context.canvas.width == 640 && context.canvas.height == 480)
@@ -292,6 +302,9 @@ class SessionSuite extends munit.FunSuite:
         override def pointer(event: PointerEvent): Unit =
           pointers += event
           provider.events += "pointer"
+        override def key(event: KeyEvent): Unit =
+          keys += event
+          provider.events += "key"
         override def update(step: Step): Unit =
           steps += step
           provider.events += "update"

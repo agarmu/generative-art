@@ -5,6 +5,9 @@ import genart.{
   Color,
   Frame,
   Image,
+  Key,
+  KeyEvent,
+  KeyModifiers,
   Path,
   Sketch,
   Step,
@@ -49,6 +52,40 @@ class ProcessingSuite extends munit.FunSuite:
 
   private val rendering = renderAt(1)
   private val denseRendering = renderAt(2)
+
+  test(
+    "keyboard repeats and releases retain the pressed key until cancellation"
+  ) {
+    val events = scala.collection.mutable.ArrayBuffer.empty[KeyEvent]
+    val input = new ProcessingKeyboardInput(events += _)
+    def event(action: Int, character: Char, modifiers: Int = 0) =
+      new processing.event.KeyEvent(
+        null,
+        0L,
+        action,
+        modifiers,
+        character,
+        java.awt.event.KeyEvent.VK_A
+      )
+    input.down(
+      event(processing.event.KeyEvent.PRESS, 'A', processing.event.Event.SHIFT)
+    )
+    input.down(event(processing.event.KeyEvent.PRESS, 'a'))
+    input.up(event(processing.event.KeyEvent.RELEASE, 'a'))
+    input.down(event(processing.event.KeyEvent.PRESS, 'a'))
+    input.cancel()
+    input.up(event(processing.event.KeyEvent.RELEASE, 'a'))
+    assertEquals(
+      events.toVector,
+      Vector(
+        KeyEvent.Pressed(Key.Character("a"), KeyModifiers(shift = true)),
+        KeyEvent.Pressed(Key.Character("a"), repeat = true),
+        KeyEvent.Released(Key.Character("a")),
+        KeyEvent.Pressed(Key.Character("a")),
+        KeyEvent.Cancelled
+      )
+    )
+  }
 
   rendering.test("initialization establishes portable drawing defaults") {
     case (applet, provider) =>
