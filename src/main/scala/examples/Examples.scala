@@ -13,6 +13,7 @@ private[examples] object Examples:
     Example("Basic Shapes", "basic", BasicShapes),
     Example("Color Walk", "walk", ColorWalk),
     Example("Drag Shapes", "drag", DragShapes),
+    Example("Images", "images", Images),
     Example("Paths", "paths", Paths),
     Example("Strokes", "strokes", Strokes),
     Example("Polygons", "polygons", Polygons)
