@@ -6,6 +6,9 @@ import genart.{
   Color,
   Image,
   Path,
+  FontFamily,
+  TextMetrics,
+  TextStyle,
   StrokeCap,
   StrokeJoin,
   Sketch,
@@ -19,6 +22,7 @@ import processing.core.{PApplet, PConstants, PGraphics}
 import java.awt.{Component, EventQueue, RenderingHints}
 import java.awt.geom.{AffineTransform, Arc2D, Path2D, Rectangle2D}
 import java.awt.image.BufferedImage
+import java.awt.font.TextLayout
 import java.util.WeakHashMap
 import javax.swing.SwingUtilities
 
@@ -107,6 +111,59 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
 
     protected def drawLine(from: Vec[2], to: Vec[2]): Unit =
       graphics.line(native(from.x), native(from.y), native(to.x), native(to.y))
+
+    private def layout(value: String, style: TextStyle): TextLayout =
+      val family = style.family match
+        case FontFamily.SansSerif => java.awt.Font.SANS_SERIF
+        case FontFamily.Serif     => java.awt.Font.SERIF
+        case FontFamily.Monospace => java.awt.Font.MONOSPACED
+      val flags =
+        (if style.bold then java.awt.Font.BOLD else java.awt.Font.PLAIN) |
+          (if style.italic then java.awt.Font.ITALIC else java.awt.Font.PLAIN)
+      val size = native(style.size)
+      require(size > 0.0f, "text size must be positive at native precision")
+      val font = new java.awt.Font(family, flags, 1).deriveFont(size)
+      val context = graphics.asInstanceOf[PGraphicsJava2D].g2
+      new TextLayout(
+        if value.isEmpty then " " else value,
+        font,
+        context.getFontRenderContext
+      )
+
+    protected def measureTextLine(
+        value: String,
+        style: TextStyle
+    ): TextMetrics =
+      val measured = layout(value, style)
+      val ascent = measured.getAscent.toDouble
+      val descent = measured.getDescent.toDouble
+      TextMetrics(
+        if value.isEmpty then 0.0 else measured.getAdvance.toDouble,
+        ascent + descent,
+        ascent,
+        descent
+      )
+
+    protected def drawTextLine(
+        value: String,
+        position: Vec[2],
+        style: TextStyle
+    ): Unit =
+      native(position.x)
+      native(position.y)
+      val shape = layout(value, style).getOutline(
+        AffineTransform.getTranslateInstance(position.x, position.y)
+      )
+      val context = graphics.asInstanceOf[PGraphicsJava2D].g2
+      val paint = context.getPaint
+      try
+        if graphics.fill then
+          context.setColor(new java.awt.Color(graphics.fillColor, true))
+          context.fill(shape)
+        if graphics.stroke then
+          context.setColor(new java.awt.Color(graphics.strokeColor, true))
+          context.draw(shape)
+      finally context.setPaint(paint)
 
     protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit =
       graphics.ellipse(

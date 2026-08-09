@@ -333,6 +333,16 @@ private[genart] class TestProvider extends SketchProvider:
     protected def setStrokeCap(cap: StrokeCap): Unit = ()
     protected def setStrokeJoin(join: StrokeJoin): Unit = ()
     protected def drawPath(path: Path): Unit = ()
+    protected def measureTextLine(
+        value: String,
+        style: TextStyle
+    ): TextMetrics =
+      TextMetrics(0.0, 0.0, 0.0, 0.0)
+    protected def drawTextLine(
+        value: String,
+        position: Vec[2],
+        style: TextStyle
+    ): Unit = ()
     protected def drawImage(
         source: Image,
         position: Vec[2],

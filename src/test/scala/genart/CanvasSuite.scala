@@ -66,6 +66,9 @@ class CanvasSuite extends munit.FunSuite:
     )
     assertRejected(canvas.circle(Vec(0.0, 0.0), -1.0))
     assertRejected(canvas.circle(Vec(0.0, 0.0), Double.NaN))
+    assertRejected(TextStyle(size = 0.0))
+    assertRejected(TextStyle(lineHeight = Double.NaN))
+    assertRejected(canvas.text("hello", Vec(Double.NaN, 0.0)))
     val image = new Image(2, 2):
       protected def read(x: Int, y: Int): Color = red
     assertRejected(canvas.image(image, Vec(0.0, 0.0), Vec(-1.0, 2.0)))
@@ -116,6 +119,25 @@ class CanvasSuite extends munit.FunSuite:
     assert(canvas.state == initial && canvas.lines.isEmpty)
   }
 
+  test("multiline text measurement and alignment share the same layout") {
+    val canvas = new RecordingCanvas
+    val style = TextStyle(
+      size = 10.0,
+      align = TextAlign.Right,
+      baseline = TextBaseline.Bottom,
+      lineHeight = 2.0
+    )
+    assertEquals(
+      canvas.measureText("wide\r\nx", style),
+      TextMetrics(20.0, 30.0, 8.0, 2.0)
+    )
+    canvas.text("wide\nx", Vec(100.0, 100.0), style)
+    assertEquals(
+      canvas.texts.toVector,
+      Vector("wide" -> Vec(80.0, 78.0), "x" -> Vec(95.0, 98.0))
+    )
+  }
+
   private def assertRejected(body: => Any): Unit =
     intercept[IllegalArgumentException](body)
 
@@ -135,6 +157,7 @@ class CanvasSuite extends munit.FunSuite:
     var state = State()
     var restoreFailure = Option.empty[Throwable]
     val lines = ArrayBuffer.empty[(Vector[Double], State)]
+    val texts = ArrayBuffer.empty[(String, Vec[2])]
     private var saved = List.empty[State]
     protected def setStrokeColor(color: Color): Unit = state =
       state.copy(stroke = Some(color))
@@ -165,6 +188,22 @@ class CanvasSuite extends munit.FunSuite:
     )
     protected def drawLine(from: Vec[2], to: Vec[2]): Unit =
       lines += ((Vector(from.x, from.y, to.x, to.y), state))
+    protected def measureTextLine(
+        value: String,
+        style: TextStyle
+    ): TextMetrics =
+      TextMetrics(
+        value.length * style.size * 0.5,
+        style.size,
+        style.size * 0.8,
+        style.size * 0.2
+      )
+    protected def drawTextLine(
+        value: String,
+        position: Vec[2],
+        style: TextStyle
+    ): Unit =
+      texts += value -> position
     protected def drawTriangle(a: Vec[2], b: Vec[2], c: Vec[2]): Unit = fail(
       "invalid triangle reached the renderer"
     )

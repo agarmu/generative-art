@@ -63,6 +63,65 @@ trait Canvas:
     validatePoint(to)
     drawLine(from, to)
 
+  final def measureText(
+      value: String,
+      style: TextStyle = TextStyle.Default
+  ): TextMetrics =
+    textMetrics(textLines(value, style), style)
+
+  final def text(
+      value: String,
+      position: Vec[2],
+      style: TextStyle = TextStyle.Default
+  ): Unit =
+    validatePoint(position)
+    val lines = textLines(value, style)
+    val metrics = textMetrics(lines, style)
+    val baseline = position.y + (style.baseline match
+      case TextBaseline.Alphabetic => 0.0
+      case TextBaseline.Top        => metrics.ascent
+      case TextBaseline.Middle     => metrics.ascent - metrics.height / 2.0
+      case TextBaseline.Bottom     => metrics.ascent - metrics.height)
+    val positioned = lines.zipWithIndex.map { case ((line, measured), index) =>
+      val offset = style.align match
+        case TextAlign.Left   => 0.0
+        case TextAlign.Center => measured.width / 2.0
+        case TextAlign.Right  => measured.width
+      val at = Vec(
+        position.x - offset,
+        baseline + index * style.size * style.lineHeight
+      )
+      validatePoint(at)
+      line -> at
+    }
+    positioned.foreach { case (line, at) =>
+      if line.nonEmpty then drawTextLine(line, at, style)
+    }
+
+  private def textLines(
+      value: String,
+      style: TextStyle
+  ): Vector[(String, TextMetrics)] =
+    value
+      .replace("\r\n", "\n")
+      .replace('\r', '\n')
+      .split("\n", -1)
+      .toVector
+      .map { line =>
+        line -> measureTextLine(line, style)
+      }
+
+  private def textMetrics(
+      lines: Vector[(String, TextMetrics)],
+      style: TextStyle
+  ): TextMetrics =
+    val ascent = lines.map(_._2.ascent).max
+    val descent = lines.map(_._2.descent).max
+    val height =
+      ascent + descent + (lines.size - 1) * style.size * style.lineHeight
+    requireFinite(height, "text height")
+    TextMetrics(lines.map(_._2.width).max, height, ascent, descent)
+
   final def image(source: Image, position: Vec[2]): Unit =
     image(source, position, Vec(source.width.toDouble, source.height.toDouble))
 
@@ -154,6 +213,12 @@ trait Canvas:
   protected def clearSurface(color: Color): Unit
   protected def drawRect(position: Vec[2], size: Vec[2]): Unit
   protected def drawLine(from: Vec[2], to: Vec[2]): Unit
+  protected def measureTextLine(value: String, style: TextStyle): TextMetrics
+  protected def drawTextLine(
+      value: String,
+      position: Vec[2],
+      style: TextStyle
+  ): Unit
   protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit
   protected def drawTriangle(a: Vec[2], b: Vec[2], c: Vec[2]): Unit
   protected def drawQuad(a: Vec[2], b: Vec[2], c: Vec[2], d: Vec[2]): Unit

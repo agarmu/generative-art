@@ -12,7 +12,10 @@ import genart.{
   Sketch,
   Step,
   StrokeCap,
-  StrokeJoin
+  StrokeJoin,
+  FontFamily,
+  TextBaseline,
+  TextStyle
 }
 import genart.lib.math.Vec
 import genart.lib.random.Seed
@@ -85,6 +88,35 @@ class ProcessingSuite extends munit.FunSuite:
         KeyEvent.Cancelled
       )
     )
+  }
+
+  rendering.test("text uses native metrics and preserves drawing state") {
+    case (applet, provider) =>
+      provider.initialize(60.0)
+      val canvas = provider.canvas
+      canvas.background(black)
+      canvas.noStroke()
+      canvas.fill(green)
+      canvas.translate(Vec(8.0, 8.0))
+      val style = TextStyle(
+        size = 20.0,
+        family = FontFamily.Monospace,
+        baseline = TextBaseline.Top
+      )
+      val measured = canvas.measureText("M", style)
+      assert(measured.width > 0.0 && measured.height > 0.0)
+      assertEqualsDouble(
+        canvas.measureText("MMMM", style).width,
+        measured.width * 4.0,
+        0.01
+      )
+      canvas.text("M", Vec(0.0, 0.0), style)
+      val image = canvas.snapshot()
+      assert((for y <- 8 until 32; x <- 8 until 32
+      yield image(x, y).green).exists(_ > 0.5))
+      assertEquals(applet.g.fillColor, 0xff00ff00)
+      canvas.rect(Vec(24.0, 24.0), Vec(8.0, 8.0))
+      assertEquals(canvas.snapshot()(36, 36), green)
   }
 
   rendering.test("initialization establishes portable drawing defaults") {

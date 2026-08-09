@@ -6,6 +6,9 @@ import genart.{
   Color,
   Image,
   Path,
+  FontFamily,
+  TextMetrics,
+  TextStyle,
   StrokeCap,
   StrokeJoin,
   Sketch,
@@ -15,6 +18,7 @@ import genart.{
 }
 import genart.lib.runtime.RunConfig
 import org.scalajs.dom
+import scala.scalajs.js
 
 object P5Provider:
   def run(container: dom.Element, config: RunConfig = RunConfig())(
@@ -94,6 +98,53 @@ final class P5Provider private[p5] (
 
     protected def drawLine(from: Vec[2], to: Vec[2]): Unit =
       instance.line(from.x, from.y, to.x, to.y)
+
+    private def font(style: TextStyle): String =
+      val family = style.family match
+        case FontFamily.SansSerif => "sans-serif"
+        case FontFamily.Serif     => "serif"
+        case FontFamily.Monospace => "monospace"
+      s"${if style.italic then "italic" else "normal"} ${
+          if style.bold then "bold" else "normal"
+        } ${style.size}px $family"
+
+    protected def measureTextLine(
+        value: String,
+        style: TextStyle
+    ): TextMetrics =
+      val context = instance.drawingContext
+      context.save()
+      try
+        context.font = font(style)
+        context.textAlign = "left"
+        context.textBaseline = "alphabetic"
+        val measured =
+          context.measureText(value).asInstanceOf[NativeTextMetrics]
+        val reference =
+          context.measureText("Mg").asInstanceOf[NativeTextMetrics]
+        val ascent = measured.fontBoundingBoxAscent.getOrElse(
+          reference.actualBoundingBoxAscent
+        )
+        val descent = measured.fontBoundingBoxDescent.getOrElse(
+          reference.actualBoundingBoxDescent
+        )
+        TextMetrics(measured.width, ascent + descent, ascent, descent)
+      finally context.restore()
+
+    protected def drawTextLine(
+        value: String,
+        position: Vec[2],
+        style: TextStyle
+    ): Unit =
+      val context = instance.drawingContext
+      context.save()
+      try
+        context.font = font(style)
+        context.textAlign = "left"
+        context.textBaseline = "alphabetic"
+        if fillEnabled then context.fillText(value, position.x, position.y)
+        if strokeEnabled then context.strokeText(value, position.x, position.y)
+      finally context.restore()
 
     protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit =
       instance.ellipse(center.x, center.y, size.x, size.y)
@@ -225,3 +276,11 @@ final class P5Provider private[p5] (
       closed = true
       imageCache = new ImageCache
       onClose()
+
+@js.native
+private[p5] trait NativeTextMetrics extends js.Object:
+  val width: Double = js.native
+  val fontBoundingBoxAscent: js.UndefOr[Double] = js.native
+  val fontBoundingBoxDescent: js.UndefOr[Double] = js.native
+  val actualBoundingBoxAscent: Double = js.native
+  val actualBoundingBoxDescent: Double = js.native
