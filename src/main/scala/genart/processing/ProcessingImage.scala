@@ -17,6 +17,13 @@ final class ProcessingImage private[processing] (
     )
 
 object ProcessingImage:
+  def writePng(source: Image, output: java.io.OutputStream): Unit =
+    val bitmap = source match
+      case image: ProcessingImage => image.bitmap
+      case _                      => upload(source)
+    if !javax.imageio.ImageIO.write(bitmap, "png", output) then
+      throw new java.io.IOException("PNG encoder unavailable")
+
   def from(source: BufferedImage): Image =
     require(source != null, "image must not be null")
     new ProcessingImage(

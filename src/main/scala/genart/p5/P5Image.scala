@@ -26,6 +26,21 @@ final class P5Image private[p5] (
     )
 
 object P5Image:
+  def toPng(source: Image): js.Promise[dom.Blob] =
+    new js.Promise[dom.Blob]((resolve, reject) =>
+      val canvas = source match
+        case image: P5Image => image.surface
+        case _              => upload(source)
+      canvas
+        .asInstanceOf[PngCanvas]
+        .toBlob(
+          blob =>
+            if blob == null then reject(new js.Error("PNG encoding failed"))
+            else resolve(blob),
+          "image/png"
+        )
+    )
+
   def from(source: dom.HTMLImageElement): Image =
     require(source.complete, "image must finish loading before conversion")
     copy(source.naturalWidth, source.naturalHeight)(
@@ -93,3 +108,8 @@ object P5Image:
 @js.native
 private[p5] trait BitmapDrawingContext extends js.Object:
   def drawImage(source: dom.ImageBitmap, x: Double, y: Double): Unit = js.native
+
+@js.native
+private[p5] trait PngCanvas extends js.Object:
+  def toBlob(callback: js.Function1[dom.Blob, Unit], mimeType: String): Unit =
+    js.native
