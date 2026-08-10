@@ -16,6 +16,7 @@ private[examples] object Examples:
     Example("Images", "images", Images),
     Example("Paths", "paths", Paths),
     Example("Screen Saver", "screensaver", ScreenSaver),
+    Example("Text", "text", Text),
     Example("Strokes", "strokes", Strokes),
     Example("Polygons", "polygons", Polygons)
   ).sortBy(_.name)
