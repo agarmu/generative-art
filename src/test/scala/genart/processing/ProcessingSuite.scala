@@ -3,6 +3,7 @@ package genart.processing
 import genart.{
   ArcMode,
   Color,
+  FillRule,
   Frame,
   Image,
   Key,
@@ -74,6 +75,12 @@ class ProcessingSuite extends munit.FunSuite:
     decoded.setRGB(0, 0, 0xff000000)
     assertEquals((image.width, image.height), (2, 1))
     assertEquals(image(0, 0), red.withAlpha(128.0 / 255.0))
+    encoded.reset()
+    ProcessingImage.writePng(image, encoded)
+    val exported = javax.imageio.ImageIO.read(
+      new java.io.ByteArrayInputStream(encoded.toByteArray)
+    )
+    assertEquals(exported.getRGB(0, 0), 0x80ff0000)
 
     val native = new processing.core.PImage(2, 1, PConstants.ARGB, 2)
     native.pixels(5) = 0xff0000ff
@@ -246,6 +253,83 @@ class ProcessingSuite extends munit.FunSuite:
       assertEquals(image(32, 32), red)
       assertEquals(image(32, 10), black)
       assertEquals(image(20, 20), green)
+  }
+
+  rendering.test(
+    "compound contours support both fill rules and reversed arcs"
+  ) { case (_, provider) =>
+    provider.initialize(60.0)
+    val canvas = provider.canvas
+    val nested = Path(Vec(4.0, 4.0))
+      .lineTo(Vec(28.0, 4.0))
+      .lineTo(Vec(28.0, 28.0))
+      .lineTo(Vec(4.0, 28.0))
+      .close
+      .moveTo(Vec(10.0, 10.0))
+      .lineTo(Vec(22.0, 10.0))
+      .lineTo(Vec(22.0, 22.0))
+      .lineTo(Vec(10.0, 22.0))
+      .close
+    canvas.background(black)
+    canvas.noStroke()
+    canvas.fill(red)
+    canvas.path(nested)
+    canvas.scoped {
+      canvas.translate(Vec(32.0, 0.0))
+      canvas.path(nested, FillRule.EvenOdd)
+    }
+    val center = Vec(16.0, 48.0)
+    canvas.path(
+      Path.arc(center, Vec(24.0, 24.0), 0.0, 2.0 * math.Pi) ++
+        Path.arc(center, Vec(12.0, 12.0), 0.0, -2.0 * math.Pi)
+    )
+    val result = canvas.snapshot()
+    assertEquals(result(16, 16), red)
+    assertEquals(result(48, 16), black)
+    assertEquals(result(40, 16), red)
+    assertEquals(result(16, 48), black)
+    assertEquals(result(25, 48), red)
+  }
+
+  rendering.test("nested clipping intersects and restores after exceptions") {
+    case (applet, provider) =>
+      provider.initialize(60.0)
+      val canvas = provider.canvas
+      val center = Vec(32.0, 32.0)
+      val ring = Path.arc(center, Vec(48.0, 48.0), 0.0, 2.0 * math.Pi) ++
+        Path.arc(center, Vec(16.0, 16.0), 0.0, 2.0 * math.Pi)
+      val quarter = Path(Vec(0.0, 0.0))
+        .lineTo(Vec(32.0, 0.0))
+        .lineTo(Vec(32.0, 32.0))
+        .lineTo(Vec(0.0, 32.0))
+        .close
+      canvas.background(black)
+      canvas.noStroke()
+      canvas.fill(red)
+      canvas.clipped(ring, FillRule.EvenOdd) {
+        canvas.background(red)
+        canvas.clipped(quarter) {
+          canvas.fill(green)
+          canvas.rect(Vec(0.0, 0.0), Vec(64.0, 64.0))
+        }
+        intercept[RuntimeException] {
+          canvas.clipped(quarter) {
+            canvas.translate(Vec(100.0, 100.0))
+            canvas.fill(green)
+            throw new RuntimeException("draw")
+          }
+        }
+        canvas.fill(blue)
+        canvas.rect(Vec(0.0, 32.0), Vec(64.0, 32.0))
+      }
+      assertEquals(applet.g.fillColor, 0xffff0000)
+      canvas.rect(Vec(0.0, 0.0), Vec(4.0, 4.0))
+      canvas.clipped(Path(Vec(0.0, 0.0))) { canvas.background(green) }
+      val result = canvas.snapshot()
+      assertEquals(result(18, 18), green)
+      assertEquals(result(18, 46), blue)
+      assertEquals(result(32, 32), black)
+      assertEquals(result(2, 2), red)
   }
 
   rendering.test("elliptical arcs preserve angles and tiny sweeps stay tiny") {

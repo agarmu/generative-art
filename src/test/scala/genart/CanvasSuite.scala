@@ -112,9 +112,14 @@ class CanvasSuite extends munit.FunSuite:
     assertRejected(canvas.rotate(Double.PositiveInfinity))
     assertRejected(canvas.translate(Vec(0.0, Double.NaN)))
     assertRejected(canvas.scale(Vec(Double.PositiveInfinity, 1.0)))
-    assertRejected(canvas.arc(Vec(0.0, 0.0), Vec(20.0, 10.0), 0.0, -1.0))
+    assertRejected(canvas.arc(Vec(0.0, 0.0), Vec(20.0, 10.0), 0.0, -7.0))
     assertRejected(
       canvas.path(Path(Vec(0.0, 0.0)).lineTo(Vec(Double.NaN, 0.0)))
+    )
+    assertRejected(
+      canvas.clipped(Path(Vec(0.0, 0.0)).moveTo(Vec(Double.NaN, 0.0))) {
+        fail("invalid clip entered its body")
+      }
     )
     assert(canvas.state == initial && canvas.lines.isEmpty)
   }
@@ -171,9 +176,10 @@ class CanvasSuite extends munit.FunSuite:
       state.copy(cap = cap)
     protected def setStrokeJoin(join: StrokeJoin): Unit = state =
       state.copy(join = join)
-    protected def drawPath(path: Path): Unit = fail(
+    protected def drawPath(path: Path, rule: FillRule): Unit = fail(
       "invalid path reached the renderer"
     )
+    protected def intersectClip(path: Path, rule: FillRule): Unit = ()
     protected def drawImage(
         source: Image,
         position: Vec[2],

@@ -6,6 +6,7 @@ import genart.{
   Color,
   Image,
   Path,
+  FillRule,
   FontFamily,
   TextMetrics,
   TextStyle,
@@ -49,6 +50,7 @@ object ProcessingProvider:
 final class ProcessingProvider(applet: PApplet) extends SketchProvider:
   private var closed = false
   private val imageCache = new WeakHashMap[Image, BufferedImage]
+  private var savedClips = List.empty[java.awt.Shape]
   private var renderThread = Option.empty[Thread]
 
   private def graphics: PGraphics = applet.g
@@ -198,14 +200,19 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
     protected def translateBy(offset: Vec[2]): Unit =
       graphics.translate(native(offset.x), native(offset.y))
 
-    protected def drawPath(path: Path): Unit =
+    private def shape(path: Path, rule: FillRule): Path2D.Double =
       Path.points(path).foreach { point =>
         native(point.x)
         native(point.y)
       }
-      val shape = new Path2D.Double(Path2D.WIND_NON_ZERO)
+      val winding = rule match
+        case FillRule.NonZero => Path2D.WIND_NON_ZERO
+        case FillRule.EvenOdd => Path2D.WIND_EVEN_ODD
+      val shape = new Path2D.Double(winding)
       shape.moveTo(path.start.x, path.start.y)
       path.segments.foreach {
+        case Path.Segment.Move(to)               => shape.moveTo(to.x, to.y)
+        case Path.Segment.Close                  => shape.closePath()
         case Path.Segment.Line(to)               => shape.lineTo(to.x, to.y)
         case Path.Segment.Quadratic(control, to) =>
           shape.quadTo(control.x, control.y, to.x, to.y)
@@ -219,7 +226,7 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
             to.y
           )
         case Path.Segment.Arc(center, size, start, sweep) =>
-          if sweep > 0.0 && size.x > 0.0 && size.y > 0.0 then
+          if sweep != 0.0 && size.x > 0.0 && size.y > 0.0 then
             shape.append(
               new Arc2D.Double(
                 center.x - size.x / 2.0,
@@ -233,16 +240,22 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
               true
             )
       }
-      if path.closed then shape.closePath()
+      shape
+
+    protected def intersectClip(path: Path, rule: FillRule): Unit =
+      graphics.asInstanceOf[PGraphicsJava2D].g2.clip(shape(path, rule))
+
+    protected def drawPath(path: Path, rule: FillRule): Unit =
+      val outline = shape(path, rule)
       val context = graphics.asInstanceOf[PGraphicsJava2D].g2
       val paint = context.getPaint
       try
         if graphics.fill then
           context.setColor(new java.awt.Color(graphics.fillColor, true))
-          context.fill(shape)
+          context.fill(outline)
         if graphics.stroke then
           context.setColor(new java.awt.Color(graphics.strokeColor, true))
-          context.draw(shape)
+          context.draw(outline)
       finally context.setPaint(paint)
 
     protected def drawImage(
@@ -292,16 +305,23 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
       graphics.scale(native(factors.x), native(factors.y))
 
     protected def pushState(): Unit =
+      val clip = graphics.asInstanceOf[PGraphicsJava2D].g2.getClip
       graphics.pushStyle()
       try graphics.pushMatrix()
       catch
         case error: Throwable =>
           graphics.popStyle()
           throw error
+      savedClips = clip :: savedClips
 
     protected def popState(): Unit =
       try graphics.popStyle()
-      finally graphics.popMatrix()
+      finally
+        try graphics.popMatrix()
+        finally
+          val clip = savedClips.head
+          savedClips = savedClips.tail
+          graphics.asInstanceOf[PGraphicsJava2D].g2.setClip(clip)
 
   def initialize(frameRate: Double): Unit =
     require(!closed, "provider is closed")

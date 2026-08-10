@@ -11,6 +11,8 @@ private[examples] object Examples:
 
   val all: Vector[Example] = Vector(
     Example("Basic Shapes", "basic", BasicShapes),
+    Example("Clipping", "clipping", Clipping),
+    Example("Cutouts", "cutouts", Cutouts),
     Example("Color Walk", "walk", ColorWalk),
     Example("Drag Shapes", "drag", DragShapes),
     Example("Images", "images", Images),

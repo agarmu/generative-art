@@ -6,6 +6,7 @@ import genart.{
   Color,
   Image,
   Path,
+  FillRule,
   FontFamily,
   TextMetrics,
   TextStyle,
@@ -158,10 +159,12 @@ final class P5Provider private[p5] (
     protected def translateBy(offset: Vec[2]): Unit =
       instance.translate(offset.x, offset.y)
 
-    protected def drawPath(path: Path): Unit =
+    private def shape(path: Path): dom.Path2D =
       val shape = new dom.Path2D()
       shape.moveTo(path.start.x, path.start.y)
       path.segments.foreach {
+        case Path.Segment.Move(to)               => shape.moveTo(to.x, to.y)
+        case Path.Segment.Close                  => shape.closePath()
         case Path.Segment.Line(to)               => shape.lineTo(to.x, to.y)
         case Path.Segment.Quadratic(control, to) =>
           shape.quadraticCurveTo(control.x, control.y, to.x, to.y)
@@ -175,7 +178,7 @@ final class P5Provider private[p5] (
             to.y
           )
         case Path.Segment.Arc(center, size, start, sweep) =>
-          if sweep > 0.0 && size.x > 0.0 && size.y > 0.0 then
+          if sweep != 0.0 && size.x > 0.0 && size.y > 0.0 then
             val angle = Path.normalizedAngle(start)
             shape.ellipse(
               center.x,
@@ -184,12 +187,23 @@ final class P5Provider private[p5] (
               size.y / 2.0,
               0.0,
               angle,
-              angle + sweep
+              angle + sweep,
+              sweep < 0.0
             )
       }
-      if path.closed then shape.closePath()
-      if fillEnabled then instance.drawingContext.fill(shape)
-      if strokeEnabled then instance.drawingContext.stroke(shape)
+      shape
+
+    private def winding(rule: FillRule): dom.CanvasFillRule = rule match
+      case FillRule.NonZero => dom.CanvasFillRule.nonzero
+      case FillRule.EvenOdd => dom.CanvasFillRule.evenodd
+
+    protected def drawPath(path: Path, rule: FillRule): Unit =
+      val outline = shape(path)
+      if fillEnabled then instance.drawingContext.fill(outline, winding(rule))
+      if strokeEnabled then instance.drawingContext.stroke(outline)
+
+    protected def intersectClip(path: Path, rule: FillRule): Unit =
+      instance.drawingContext.clip(shape(path), winding(rule))
 
     protected def drawImage(
         source: Image,

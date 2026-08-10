@@ -332,7 +332,8 @@ private[genart] class TestProvider extends SketchProvider:
     protected def setStrokeWeight(weight: Double): Unit = ()
     protected def setStrokeCap(cap: StrokeCap): Unit = ()
     protected def setStrokeJoin(join: StrokeJoin): Unit = ()
-    protected def drawPath(path: Path): Unit = ()
+    protected def drawPath(path: Path, rule: FillRule): Unit = ()
+    protected def intersectClip(path: Path, rule: FillRule): Unit = ()
     protected def measureTextLine(
         value: String,
         style: TextStyle

@@ -170,14 +170,30 @@ trait Canvas:
       to: Vec[2]
   ): Unit = path(Path(from).bezierTo(control1, control2, to))
 
-  final def path(value: Path): Unit =
+  final def path(value: Path, rule: FillRule = FillRule.NonZero): Unit =
+    validatePath(value)
+    if value.segments.exists {
+        case Path.Segment.Move(_) | Path.Segment.Close => false
+        case _                                         => true
+      }
+    then drawPath(value, rule)
+
+  final def clipped[A](value: Path, rule: FillRule = FillRule.NonZero)(
+      body: => A
+  ): A =
+    validatePath(value)
+    scoped {
+      intersectClip(value, rule)
+      body
+    }
+
+  private def validatePath(value: Path): Unit =
     Path.points(value).foreach(validatePoint)
     value.segments.foreach {
       case Path.Segment.Arc(_, size, start, sweep) =>
         Path.validateArc(size, start, sweep)
       case _ => ()
     }
-    if value.segments.nonEmpty then drawPath(value)
 
   final def translate(offset: Vec[2]): Unit =
     validatePoint(offset)
@@ -222,7 +238,8 @@ trait Canvas:
   protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit
   protected def drawTriangle(a: Vec[2], b: Vec[2], c: Vec[2]): Unit
   protected def drawQuad(a: Vec[2], b: Vec[2], c: Vec[2], d: Vec[2]): Unit
-  protected def drawPath(path: Path): Unit
+  protected def drawPath(path: Path, rule: FillRule): Unit
+  protected def intersectClip(path: Path, rule: FillRule): Unit
   protected def drawImage(
       source: Image,
       position: Vec[2],

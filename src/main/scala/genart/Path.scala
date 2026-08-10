@@ -6,11 +6,16 @@ import genart.lib.math.{Vec, floorMod}
 enum ArcMode:
   case Open, Chord, Pie
 
+enum FillRule:
+  case NonZero, EvenOdd
+
 final case class Path(
     start: Vec[2],
-    segments: Vector[Path.Segment] = Vector.empty,
-    closed: Boolean = false
+    segments: Vector[Path.Segment] = Vector.empty
 ):
+  def moveTo(to: Vec[2]): Path =
+    copy(segments = segments :+ Path.Segment.Move(to))
+
   def lineTo(to: Vec[2]): Path =
     copy(segments = segments :+ Path.Segment.Line(to))
 
@@ -30,10 +35,17 @@ final case class Path(
       Path.Segment.Arc(center, size, startAngle, sweepAngle)
   )
 
-  def close: Path = copy(closed = true)
+  def close: Path = copy(segments = segments :+ Path.Segment.Close)
+
+  def ++(other: Path): Path =
+    copy(segments =
+      segments ++ (Path.Segment.Move(other.start) +: other.segments)
+    )
 
 object Path:
   enum Segment:
+    case Move(to: Vec[2])
+    case Close
     case Line(to: Vec[2])
     case Quadratic(control: Vec[2], to: Vec[2])
     case Cubic(control1: Vec[2], control2: Vec[2], to: Vec[2])
@@ -56,7 +68,7 @@ object Path:
     if sweepAngle == 0.0 || size.x == 0.0 || size.y == 0.0 then Path(start)
     else
       val outline = Path(start).arcTo(center, size, startAngle, sweepAngle)
-      if sweepAngle == 2.0 * math.Pi then outline.close
+      if sweepAngle.abs == 2.0 * math.Pi then outline.close
       else
         mode match
           case ArcMode.Open  => outline
@@ -89,12 +101,14 @@ object Path:
     requireFinite(size.y, "height")
     require(size.x >= 0.0 && size.y >= 0.0, "dimensions must be nonnegative")
     require(
-      sweep >= 0.0 && sweep <= 2.0 * math.Pi,
-      "sweepAngle must be in [0, 2π]"
+      sweep.abs <= 2.0 * math.Pi,
+      "sweepAngle must be in [-2π, 2π]"
     )
 
   private[genart] def points(path: Path): Iterator[Vec[2]] =
     Iterator.single(path.start) ++ path.segments.iterator.flatMap {
+      case Segment.Move(to)                      => Iterator.single(to)
+      case Segment.Close                         => Iterator.empty
       case Segment.Line(to)                      => Iterator.single(to)
       case Segment.Quadratic(control, to)        => Iterator(control, to)
       case Segment.Cubic(control1, control2, to) =>
