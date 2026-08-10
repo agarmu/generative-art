@@ -2,9 +2,11 @@ package genart.processing
 
 import genart.{Color, Image}
 import java.awt.image.BufferedImage
+import processing.core.PImage
 
-private[processing] final class ProcessingImage(val bitmap: BufferedImage)
-    extends Image(bitmap.getWidth, bitmap.getHeight):
+final class ProcessingImage private[processing] (
+    private[processing] val bitmap: BufferedImage
+) extends Image(bitmap.getWidth, bitmap.getHeight):
   protected def read(x: Int, y: Int): Color =
     val argb = bitmap.getRGB(x, y)
     Color.rgb(
@@ -14,8 +16,27 @@ private[processing] final class ProcessingImage(val bitmap: BufferedImage)
       ((argb >>> 24) & 255) / 255.0
     )
 
-private[processing] object ProcessingImage:
-  def upload(source: Image): BufferedImage =
+object ProcessingImage:
+  def from(source: BufferedImage): Image =
+    require(source != null, "image must not be null")
+    new ProcessingImage(
+      new BufferedImage(
+        source.getColorModel,
+        source.copyData(null),
+        source.isAlphaPremultiplied,
+        null
+      )
+    )
+
+  def from(source: PImage): Image =
+    require(source != null, "image must not be null")
+    require(
+      source.pixelWidth > 0 && source.pixelHeight > 0,
+      "image must be loaded"
+    )
+    new ProcessingImage(source.get().getNative.asInstanceOf[BufferedImage])
+
+  private[processing] def upload(source: Image): BufferedImage =
     val bitmap = new BufferedImage(
       source.width,
       source.height,

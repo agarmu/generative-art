@@ -57,6 +57,36 @@ class ProcessingSuite extends munit.FunSuite:
   private val denseRendering = renderAt(2)
 
   test(
+    "native image adapters copy decoded pixels and preserve physical dimensions"
+  ) {
+    val original = new java.awt.image.BufferedImage(
+      2,
+      1,
+      java.awt.image.BufferedImage.TYPE_INT_ARGB
+    )
+    original.setRGB(0, 0, 0x80ff0000)
+    val encoded = new java.io.ByteArrayOutputStream
+    javax.imageio.ImageIO.write(original, "png", encoded)
+    val decoded = javax.imageio.ImageIO.read(
+      new java.io.ByteArrayInputStream(encoded.toByteArray)
+    )
+    val image = ProcessingImage.from(decoded)
+    decoded.setRGB(0, 0, 0xff000000)
+    assertEquals((image.width, image.height), (2, 1))
+    assertEquals(image(0, 0), red.withAlpha(128.0 / 255.0))
+
+    val native = new processing.core.PImage(2, 1, PConstants.ARGB, 2)
+    native.pixels(5) = 0xff0000ff
+    val captured = ProcessingImage.from(native)
+    native.pixels(5) = 0
+    assertEquals((captured.width, captured.height), (4, 2))
+    assertEquals(captured(1, 1), blue)
+    intercept[IllegalArgumentException](
+      ProcessingImage.from(new processing.core.PImage())
+    )
+  }
+
+  test(
     "keyboard repeats and releases retain the pressed key until cancellation"
   ) {
     val events = scala.collection.mutable.ArrayBuffer.empty[KeyEvent]
