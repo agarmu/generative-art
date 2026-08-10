@@ -332,6 +332,42 @@ class ProcessingSuite extends munit.FunSuite:
       assertEquals(result(2, 2), red)
   }
 
+  for (fixture, density) <- Vector((rendering, 1), (denseRendering, 2)) do
+    fixture.test(s"scopes preserve clips under zero scale at density $density") {
+      case (applet, provider) =>
+        provider.initialize(60.0)
+        val canvas = provider.canvas
+        val boundary = Path(Vec(8.0, 8.0))
+          .lineTo(Vec(24.0, 8.0))
+          .lineTo(Vec(24.0, 24.0))
+          .lineTo(Vec(8.0, 24.0))
+          .close
+        canvas.background(black)
+        canvas.scoped {
+          canvas.translate(Vec(8.0, 4.0))
+          canvas.clipped(boundary) {
+            canvas.scale(Vec(0.0, 1.0))
+            val context = applet.g.asInstanceOf[PGraphicsJava2D].g2
+            val transform = context.getTransform
+            canvas.scoped { () }
+            intercept[RuntimeException] {
+              canvas.scoped {
+                canvas.translate(Vec(100.0, 100.0))
+                throw new RuntimeException("draw")
+              }
+            }
+            assertEquals(context.getTransform, transform)
+            canvas.background(red)
+          }
+        }
+        val result = canvas.snapshot()
+        assertEquals(result(20 * density, 16 * density), red)
+        assertEquals(result(10 * density, 10 * density), black)
+        assertEquals(result(40 * density, 40 * density), black)
+        canvas.background(green)
+        assertEquals(canvas.snapshot()(40 * density, 40 * density), green)
+    }
+
   rendering.test("elliptical arcs preserve angles and tiny sweeps stay tiny") {
     case (_, provider) =>
       provider.initialize(60.0)

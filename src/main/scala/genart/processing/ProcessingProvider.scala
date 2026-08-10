@@ -304,8 +304,16 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
     protected def scaleBy(factors: Vec[2]): Unit =
       graphics.scale(native(factors.x), native(factors.y))
 
+    private def withDeviceCoordinates[A](body: java.awt.Graphics2D => A): A =
+      val context = graphics.asInstanceOf[PGraphicsJava2D].g2
+      val transform = context.getTransform
+      // getClip cannot recover user coordinates under a singular transform.
+      context.setTransform(new AffineTransform)
+      try body(context)
+      finally context.setTransform(transform)
+
     protected def pushState(): Unit =
-      val clip = graphics.asInstanceOf[PGraphicsJava2D].g2.getClip
+      val clip = withDeviceCoordinates(_.getClip)
       graphics.pushStyle()
       try graphics.pushMatrix()
       catch
@@ -321,7 +329,7 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
         finally
           val clip = savedClips.head
           savedClips = savedClips.tail
-          graphics.asInstanceOf[PGraphicsJava2D].g2.setClip(clip)
+          withDeviceCoordinates(_.setClip(clip))
 
   def initialize(frameRate: Double): Unit =
     require(!closed, "provider is closed")
