@@ -29,22 +29,28 @@ restart.addEventListener("click", run);
 window.addEventListener("pagehide", stop, { once: true });
 
 resize.addEventListener("pointerdown", event => {
-  if (event.button !== 0) return;
+  if (!event.isPrimary || event.button !== 0 || drag) return;
   const { width, height } = container.getBoundingClientRect();
-  drag = { x: event.clientX, y: event.clientY, width, height };
+  drag = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, width, height };
   resize.setPointerCapture(event.pointerId);
 });
 
 resize.addEventListener("pointermove", event => {
-  if (!drag) return;
+  if (!drag || event.pointerId !== drag.pointerId) return;
   const width = drag.width + 2 * (event.clientX - drag.x);
   const height = drag.height + event.clientY - drag.y;
   container.style.width = `${Math.max(100, Math.min(stage.clientWidth, width))}px`;
   container.style.height = `${Math.max(100, Math.min(stage.clientHeight, height))}px`;
 });
 
-resize.addEventListener("pointerup", event => {
-  resize.releasePointerCapture(event.pointerId);
-});
+function endResize(event) {
+  if (!drag || event.pointerId !== drag.pointerId) return;
+  drag = null;
+  if (resize.hasPointerCapture(event.pointerId)) {
+    resize.releasePointerCapture(event.pointerId);
+  }
+}
 
-resize.addEventListener("lostpointercapture", () => { drag = null; });
+resize.addEventListener("pointerup", endResize);
+resize.addEventListener("pointercancel", endResize);
+resize.addEventListener("lostpointercapture", endResize);
