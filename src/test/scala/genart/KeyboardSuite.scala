@@ -8,3 +8,17 @@ class KeyboardSuite extends munit.FunSuite:
     assertEquals(Key.fromName(" "), Some(Key.Space))
     assertEquals(Key.fromName("Dead"), None)
   }
+
+  test("printable keys accept single Unicode code points") {
+    assertEquals(Key.fromName("é"), Some(Key.Character("é")))
+    assertEquals(
+      Key.fromName("\ud83d\ude00"),
+      Some(Key.Character("\ud83d\ude00"))
+    )
+    assertEquals(
+      Key.fromName("\ud801\udc00"),
+      Some(Key.Character("\ud801\udc28"))
+    )
+    for invalid <- List("", "ab", "e\u0301", "\n", "\u007f", "\ud801", "\udc00")
+    do assertEquals(Key.fromName(invalid), None)
+  }

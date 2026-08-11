@@ -1,5 +1,7 @@
 package genart
 
+import java.lang.{Character as Unicode}
+
 enum Key:
   case Character(value: String)
   case ArrowLeft, ArrowRight, ArrowUp, ArrowDown
@@ -38,9 +40,17 @@ object Key:
         .toIntOption
         .filter(n => n >= 1 && n <= 24)
         .map(Key.Function.apply)
-    case value if value.length == 1 && !value.head.isControl =>
-      Some(Key.Character(value.head.toLower.toString))
-    case _ => None
+    case value =>
+      Option
+        .when(value.nonEmpty)(value.codePointAt(0))
+        .filter { point =>
+          Unicode.charCount(point) == value.length &&
+          !Unicode.isISOControl(point) &&
+          (point < Unicode.MIN_SURROGATE || point > Unicode.MAX_SURROGATE)
+        }
+        .map { point =>
+          Key.Character(new String(Unicode.toChars(Unicode.toLowerCase(point))))
+        }
 
 final case class KeyModifiers(
     shift: Boolean = false,
