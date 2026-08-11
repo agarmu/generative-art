@@ -21,8 +21,9 @@ final class Images(context: SketchContext) extends Sketch:
   def draw(frame: Frame): Unit =
     canvas.background(Color.rgb(1.0, 1.0, 1.0))
     picture.foreach { source =>
-      val width = math.min(canvas.width * 0.4, canvas.height * 0.75)
-      val size = Vec(width, width * 0.8)
+      val aspect = source.width.toDouble / source.height
+      val width = math.min(canvas.width * 0.4, canvas.height * 0.75 * aspect)
+      val size = Vec(width, width / aspect)
       canvas.scoped {
         canvas.translate(Vec(canvas.width * 0.28, canvas.height * 0.5))
         canvas.rotate(-0.12)
