@@ -43,12 +43,14 @@ final class ScreenSaver(context: SketchContext) extends Sketch:
       seconds += step.deltaSeconds
       val limit = Vec(canvas.width.toDouble, canvas.height.toDouble) - size
       val next = position + velocity * step.deltaSeconds
-      val hitX = next.x <= 0.0 || next.x >= limit.x
-      val hitY = next.y <= 0.0 || next.y >= limit.y
       position = Vec(clamp(next.x, 0.0, limit.x), clamp(next.y, 0.0, limit.y))
       velocity = Vec(
-        if hitX then -velocity.x else velocity.x,
-        if hitY then -velocity.y else velocity.y
+        if next.x <= 0.0 then velocity.x.abs
+        else if next.x >= limit.x then -velocity.x.abs
+        else velocity.x,
+        if next.y <= 0.0 then velocity.y.abs
+        else if next.y >= limit.y then -velocity.y.abs
+        else velocity.y
       )
 
   override def resized(): Unit =
