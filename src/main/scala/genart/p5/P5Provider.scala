@@ -55,6 +55,7 @@ final class P5Provider private[p5] (
 ) extends SketchProvider:
   private def instance: P5Drawing = target.getOrElse(host)
   private var closed = false
+  private val children = scala.collection.mutable.Set.empty[Surface]
   private var imageCache = new ImageCache
   private var fillEnabled = true
   private var strokeEnabled = true
@@ -85,6 +86,29 @@ final class P5Provider private[p5] (
 
     private def css(color: Color): String =
       s"rgba(${color.red * 255},${color.green * 255},${color.blue * 255},${color.alpha})"
+
+    protected def createSurface(width: Int, height: Int): Surface =
+      val graphics = host.createGraphics(width, height)
+      var registered = Option.empty[Surface]
+      val provider = new P5Provider(
+        host,
+        container,
+        () => {
+          try graphics.remove()
+          finally registered.foreach(children -= _)
+        },
+        Some(graphics)
+      )
+      val surface = new Surface:
+        def canvas: Canvas = provider.canvas
+        def isClosed: Boolean = provider.closed
+        def close(): Unit = provider.close()
+      registered = Some(surface)
+      try provider.initialize(0.0)
+      catch
+        case failure: Throwable => Using.resource(surface)(_ => throw failure)
+      children += surface
+      surface
 
     protected def setStrokeColor(color: Color): Unit =
       instance.stroke(color.red, color.green, color.blue, color.alpha)
@@ -277,12 +301,14 @@ final class P5Provider private[p5] (
       savedPaint = (fillEnabled, strokeEnabled) :: savedPaint
 
     protected def popState(): Unit =
-      try instance.pop()
+      try
+        if !closed then instance.pop()
       finally
         val (fill, stroke) = savedPaint.head
         savedPaint = savedPaint.tail
-        fillEnabled = fill
-        strokeEnabled = stroke
+        if !closed then
+          fillEnabled = fill
+          strokeEnabled = stroke
 
   def initialize(frameRate: Double): Unit =
     require(!closed, "provider is closed")
@@ -321,8 +347,17 @@ final class P5Provider private[p5] (
   def close(): Unit =
     if !closed then
       closed = true
-      imageCache = new ImageCache
-      onClose()
+      try
+        Using.Manager { use =>
+          use(
+            new AutoCloseable:
+              def close(): Unit = onClose()
+          )
+          children.toList.foreach(child => use(child))
+        }.get
+      finally
+        children.clear()
+        imageCache = new ImageCache
 
 @js.native
 private[p5] trait NativeTextMetrics extends js.Object:
