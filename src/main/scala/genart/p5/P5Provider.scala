@@ -3,6 +3,9 @@ package genart.p5
 import genart.lib.math.Vec
 import genart.{
   Canvas,
+  BlendMode,
+  Gradient,
+  Surface,
   Color,
   Image,
   Path,
@@ -20,6 +23,7 @@ import genart.{
 import genart.lib.runtime.RunConfig
 import org.scalajs.dom
 import scala.scalajs.js
+import scala.util.Using
 
 object P5Provider:
   def run(container: dom.Element, config: RunConfig = RunConfig())(

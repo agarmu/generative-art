@@ -3,6 +3,9 @@ package genart.processing
 import genart.lib.math.Vec
 import genart.{
   Canvas,
+  Surface,
+  BlendMode,
+  Gradient,
   Color,
   Image,
   Path,
@@ -20,8 +23,18 @@ import genart.{
 import genart.lib.runtime.RunConfig
 import processing.awt.PGraphicsJava2D
 import processing.core.{PApplet, PConstants, PGraphics}
-import java.awt.{Component, EventQueue, RenderingHints}
-import java.awt.geom.{AffineTransform, Arc2D, Path2D, Rectangle2D}
+import java.awt.{AlphaComposite, Component, EventQueue, RenderingHints}
+import java.awt.image.RescaleOp
+import scala.util.Using
+import java.awt.geom.{
+  AffineTransform,
+  Arc2D,
+  Ellipse2D,
+  Line2D,
+  Path2D,
+  Point2D,
+  Rectangle2D
+}
 import java.awt.image.BufferedImage
 import java.awt.font.TextLayout
 import java.util.WeakHashMap
