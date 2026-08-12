@@ -9,6 +9,10 @@ trait Canvas:
   def height: Int
   def snapshot(): Image
 
+  final def clear(): Unit =
+    ensureOpen()
+    clearTransparent()
+
   final def stroke(color: Color): Unit =
     ensureOpen()
     setStrokeColor(color)
@@ -240,6 +244,7 @@ trait Canvas:
     require(size.x >= 0.0 && size.y >= 0.0, "dimensions must be nonnegative")
 
   protected def ensureOpen(): Unit = ()
+  protected def clearTransparent(): Unit
   protected def setStrokeColor(color: Color): Unit
   protected def setFillColor(color: Color): Unit
   protected def disableStroke(): Unit

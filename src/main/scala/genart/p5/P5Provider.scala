@@ -73,6 +73,17 @@ final class P5Provider private[p5] (
     override protected def ensureOpen(): Unit =
       require(!closed, "provider is closed")
 
+    protected def clearTransparent(): Unit =
+      val context = instance.drawingContext
+      context.save()
+      try
+        context.setTransform(1, 0, 0, 1, 0, 0)
+        context.clearRect(0, 0, width, height)
+      finally context.restore()
+
+    private def css(color: Color): String =
+      s"rgba(${color.red * 255},${color.green * 255},${color.blue * 255},${color.alpha})"
+
     protected def setStrokeColor(color: Color): Unit =
       instance.stroke(color.red, color.green, color.blue, color.alpha)
       strokeEnabled = true
@@ -103,7 +114,14 @@ final class P5Provider private[p5] (
         case StrokeJoin.Bevel => instance.BEVEL)
 
     protected def clearSurface(color: Color): Unit =
-      instance.background(color.red, color.green, color.blue)
+      val context = instance.drawingContext
+      context.save()
+      try
+        context.setTransform(1, 0, 0, 1, 0, 0)
+        context.globalCompositeOperation = "source-over"
+        context.fillStyle = css(Color.rgb(color.red, color.green, color.blue))
+        context.fillRect(0, 0, width, height)
+      finally context.restore()
 
     protected def drawRect(position: Vec[2], size: Vec[2]): Unit =
       instance.rect(position.x, position.y, size.x, size.y)

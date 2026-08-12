@@ -164,6 +164,7 @@ class CanvasSuite extends munit.FunSuite:
     val lines = ArrayBuffer.empty[(Vector[Double], State)]
     val texts = ArrayBuffer.empty[(String, Vec[2])]
     private var saved = List.empty[State]
+    protected def clearTransparent(): Unit = fail("unexpected clear")
     protected def setStrokeColor(color: Color): Unit = state =
       state.copy(stroke = Some(color))
     protected def setFillColor(color: Color): Unit = state =

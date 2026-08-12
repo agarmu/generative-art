@@ -67,6 +67,7 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
   private var renderThread = Option.empty[Thread]
 
   private def graphics: PGraphics = applet.g
+  private def context = graphics.asInstanceOf[PGraphicsJava2D].g2
 
   val canvas: Canvas = new Canvas:
     def width: Int =
@@ -78,10 +79,27 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
 
     def snapshot(): Image =
       require(!closed, "provider is closed")
-      new ProcessingImage(graphics.get().getNative.asInstanceOf[BufferedImage])
+      ProcessingImage.from(
+        graphics.asInstanceOf[PGraphicsJava2D].image.asInstanceOf[BufferedImage]
+      )
 
     override protected def ensureOpen(): Unit =
       require(!closed, "provider is closed")
+
+    private def clearWith(color: Option[Color]): Unit =
+      val drawing = context.create().asInstanceOf[java.awt.Graphics2D]
+      try
+        drawing.setTransform(new AffineTransform)
+        drawing.setComposite(AlphaComposite.Src)
+        drawing.setColor(
+          color.fold(new java.awt.Color(0, 0, 0, 0))(c =>
+            new java.awt.Color(c.red.toFloat, c.green.toFloat, c.blue.toFloat)
+          )
+        )
+        drawing.fillRect(0, 0, graphics.pixelWidth, graphics.pixelHeight)
+      finally drawing.dispose()
+
+    protected def clearTransparent(): Unit = clearWith(None)
 
     protected def setStrokeColor(color: Color): Unit =
       graphics.stroke(
@@ -116,13 +134,7 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
         case StrokeJoin.Round => PConstants.ROUND
         case StrokeJoin.Bevel => PConstants.BEVEL)
 
-    protected def clearSurface(color: Color): Unit =
-      graphics.background(
-        color.red.toFloat,
-        color.green.toFloat,
-        color.blue.toFloat
-      )
-
+    protected def clearSurface(color: Color): Unit = clearWith(Some(color))
     protected def drawRect(position: Vec[2], size: Vec[2]): Unit =
       graphics.rect(
         native(position.x),
