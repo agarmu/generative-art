@@ -48,10 +48,12 @@ object P5Provider:
     (width.toInt, height.toInt)
 
 final class P5Provider private[p5] (
-    instance: P5,
+    host: P5,
     container: dom.Element,
-    onClose: () => Unit
+    onClose: () => Unit,
+    target: Option[P5Graphics] = None
 ) extends SketchProvider:
+  private def instance: P5Drawing = target.getOrElse(host)
   private var closed = false
   private var imageCache = new ImageCache
   private var fillEnabled = true
@@ -103,15 +105,15 @@ final class P5Provider private[p5] (
 
     protected def setStrokeCap(cap: StrokeCap): Unit =
       instance.strokeCap(cap match
-        case StrokeCap.Butt   => instance.SQUARE
-        case StrokeCap.Round  => instance.ROUND
-        case StrokeCap.Square => instance.PROJECT)
+        case StrokeCap.Butt   => host.SQUARE
+        case StrokeCap.Round  => host.ROUND
+        case StrokeCap.Square => host.PROJECT)
 
     protected def setStrokeJoin(join: StrokeJoin): Unit =
       instance.strokeJoin(join match
-        case StrokeJoin.Miter => instance.MITER
-        case StrokeJoin.Round => instance.ROUND
-        case StrokeJoin.Bevel => instance.BEVEL)
+        case StrokeJoin.Miter => host.MITER
+        case StrokeJoin.Round => host.ROUND
+        case StrokeJoin.Bevel => host.BEVEL)
 
     protected def clearSurface(color: Color): Unit =
       val context = instance.drawingContext
@@ -284,27 +286,29 @@ final class P5Provider private[p5] (
 
   def initialize(frameRate: Double): Unit =
     require(!closed, "provider is closed")
-    instance.canvas.style.display = "none"
-    val (width, height) = P5Provider.dimensions(container)
-    require(
-      width > 0 && height > 0,
-      "sketch container must have positive dimensions"
-    )
-    instance.createCanvas(width, height)
-    instance.canvas.style.display = "block"
+    if target.isEmpty then
+      host.canvas.style.display = "none"
+      val (width, height) = P5Provider.dimensions(container)
+      require(
+        width > 0 && height > 0,
+        "sketch container must have positive dimensions"
+      )
+      host.createCanvas(width, height)
+      host.canvas.style.display = "block"
+      host.frameRate(frameRate)
     instance.pixelDensity(1)
-    instance.frameRate(frameRate)
-    instance.colorMode(instance.RGB, 1.0)
-    instance.blendMode(instance.BLEND)
-    instance.rectMode(instance.CORNER)
-    instance.ellipseMode(instance.CENTER)
-    instance.angleMode(instance.RADIANS)
+    instance.colorMode(host.RGB, 1.0)
+    instance.blendMode(host.BLEND)
+    instance.rectMode(host.CORNER)
+    instance.ellipseMode(host.CENTER)
+    instance.angleMode(host.RADIANS)
     instance.stroke(0.0, 0.0, 0.0, 1.0)
     instance.fill(1.0, 1.0, 1.0, 1.0)
     instance.strokeWeight(1.0)
     canvas.strokeCap(StrokeCap.Round)
     canvas.strokeJoin(StrokeJoin.Miter)
     instance.resetMatrix()
+    if target.nonEmpty then canvas.clear()
 
   def beginFrame(): Unit = instance.resetMatrix()
 
@@ -312,7 +316,7 @@ final class P5Provider private[p5] (
     require(width > 0 && height > 0, "dimensions must be positive")
     instance.resizeCanvas(width, height, true)
     instance.resetMatrix()
-    instance.background(0.0, 0.0, 0.0)
+    canvas.background(Color.rgb(0.0, 0.0, 0.0))
 
   def close(): Unit =
     if !closed then

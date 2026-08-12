@@ -7,13 +7,9 @@ import scala.scalajs.js.annotation.JSImport
 @js.native
 @JSImport("p5", JSImport.Default)
 private[p5] class P5(sketch: js.Function1[P5, Unit], container: dom.Element)
-    extends js.Object:
+    extends P5Drawing:
   var setup: js.Function0[Unit] = js.native
   var draw: js.Function0[Unit] = js.native
-  val width: Int = js.native
-  val height: Int = js.native
-  val canvas: dom.HTMLCanvasElement = js.native
-  val drawingContext: dom.CanvasRenderingContext2D = js.native
   val RGB: String = js.native
   val BLEND: String = js.native
   val CORNER: String = js.native
@@ -26,9 +22,19 @@ private[p5] class P5(sketch: js.Function1[P5, Unit], container: dom.Element)
   val BEVEL: String = js.native
 
   def createCanvas(width: Int, height: Int): js.Any = js.native
+  def createGraphics(width: Int, height: Int): P5Graphics = js.native
+  def frameRate(value: Double): Unit = js.native
+  def noLoop(): Unit = js.native
+  def remove(): js.Promise[Unit] = js.native
+
+@js.native
+private[p5] trait P5Drawing extends js.Object:
+  val width: Int = js.native
+  val height: Int = js.native
+  val canvas: dom.HTMLCanvasElement = js.native
+  val drawingContext: dom.CanvasRenderingContext2D = js.native
   def resizeCanvas(width: Int, height: Int, noRedraw: Boolean): Unit = js.native
   def pixelDensity(value: Int): Unit = js.native
-  def frameRate(value: Double): Unit = js.native
   def colorMode(mode: String, maximum: Double): Unit = js.native
   def blendMode(mode: String): Unit = js.native
   def rectMode(mode: String): Unit = js.native
@@ -73,5 +79,7 @@ private[p5] class P5(sketch: js.Function1[P5, Unit], container: dom.Element)
   def push(): Unit = js.native
   def pop(): Unit = js.native
   def resetMatrix(): Unit = js.native
-  def noLoop(): Unit = js.native
-  def remove(): js.Promise[Unit] = js.native
+
+@js.native
+private[p5] trait P5Graphics extends P5Drawing:
+  def remove(): Unit = js.native
