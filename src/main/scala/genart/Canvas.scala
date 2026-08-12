@@ -9,14 +9,29 @@ trait Canvas:
   def height: Int
   def snapshot(): Image
 
-  final def stroke(color: Color): Unit = setStrokeColor(color)
-  final def fill(color: Color): Unit = setFillColor(color)
-  final def noStroke(): Unit = disableStroke()
-  final def noFill(): Unit = disableFill()
-  final def strokeCap(cap: StrokeCap): Unit = setStrokeCap(cap)
-  final def strokeJoin(join: StrokeJoin): Unit = setStrokeJoin(join)
+  final def stroke(color: Color): Unit =
+    ensureOpen()
+    setStrokeColor(color)
+
+  final def fill(color: Color): Unit =
+    ensureOpen()
+    setFillColor(color)
+
+  final def noStroke(): Unit =
+    ensureOpen()
+    disableStroke()
+  final def noFill(): Unit =
+    ensureOpen()
+    disableFill()
+  final def strokeCap(cap: StrokeCap): Unit =
+    ensureOpen()
+    setStrokeCap(cap)
+  final def strokeJoin(join: StrokeJoin): Unit =
+    ensureOpen()
+    setStrokeJoin(join)
 
   final def strokeWeight(weight: Double): Unit =
+    ensureOpen()
     requireFinite(weight, "strokeWeight")
     require(weight >= 0.0, "strokeWeight must be nonnegative")
     setStrokeWeight(weight)
@@ -29,6 +44,7 @@ trait Canvas:
     strokeJoin(value.strokeJoin)
 
   final def background(color: Color): Unit =
+    ensureOpen()
     require(color.alpha == 1.0, "background must be opaque")
     clearSurface(color)
 
@@ -102,6 +118,7 @@ trait Canvas:
       value: String,
       style: TextStyle
   ): Vector[(String, TextMetrics)] =
+    ensureOpen()
     value
       .replace("\r\n", "\n")
       .replace('\r', '\n')
@@ -200,6 +217,7 @@ trait Canvas:
     translateBy(offset)
 
   final def rotate(radians: Double): Unit =
+    ensureOpen()
     requireFinite(radians, "radians")
     rotateBy(radians)
 
@@ -208,10 +226,12 @@ trait Canvas:
     scaleBy(factors)
 
   final def scoped[A](body: => A): A =
+    ensureOpen()
     pushState()
     Using.resource(() => popState())(_ => body)(using Canvas.releaseScope)
 
   private def validatePoint(point: Vec[2]): Unit =
+    ensureOpen()
     requireFinite(point.x, "x")
     requireFinite(point.y, "y")
 
@@ -219,6 +239,7 @@ trait Canvas:
     validatePoint(size)
     require(size.x >= 0.0 && size.y >= 0.0, "dimensions must be nonnegative")
 
+  protected def ensureOpen(): Unit = ()
   protected def setStrokeColor(color: Color): Unit
   protected def setFillColor(color: Color): Unit
   protected def disableStroke(): Unit

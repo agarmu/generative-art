@@ -55,12 +55,19 @@ final class P5Provider private[p5] (
   private var savedPaint = List.empty[(Boolean, Boolean)]
 
   val canvas: Canvas = new Canvas:
-    def width: Int = instance.width
-    def height: Int = instance.height
+    def width: Int =
+      ensureOpen()
+      instance.width
+    def height: Int =
+      ensureOpen()
+      instance.height
 
     def snapshot(): Image =
       require(!closed, "provider is closed")
       P5Image.capture(instance.canvas)
+
+    override protected def ensureOpen(): Unit =
+      require(!closed, "provider is closed")
 
     protected def setStrokeColor(color: Color): Unit =
       instance.stroke(color.red, color.green, color.blue, color.alpha)

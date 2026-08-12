@@ -56,12 +56,19 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
   private def graphics: PGraphics = applet.g
 
   val canvas: Canvas = new Canvas:
-    def width: Int = graphics.width
-    def height: Int = graphics.height
+    def width: Int =
+      ensureOpen()
+      graphics.width
+    def height: Int =
+      ensureOpen()
+      graphics.height
 
     def snapshot(): Image =
       require(!closed, "provider is closed")
       new ProcessingImage(graphics.get().getNative.asInstanceOf[BufferedImage])
+
+    override protected def ensureOpen(): Unit =
+      require(!closed, "provider is closed")
 
     protected def setStrokeColor(color: Color): Unit =
       graphics.stroke(
