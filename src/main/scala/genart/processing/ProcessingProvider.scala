@@ -67,6 +67,7 @@ final class ProcessingProvider private (
   def this(applet: PApplet) = this(applet, None)
   private var closed = false
   private val children = scala.collection.mutable.Set.empty[Surface]
+  private val tintCache = new WeakHashMap[Image, Vector[(Color, BufferedImage)]]
   private val imageCache = new WeakHashMap[Image, BufferedImage]
   private var fillGradient = Option.empty[Gradient]
   private var strokeGradient = Option.empty[Gradient]
@@ -148,6 +149,8 @@ final class ProcessingProvider private (
         case BlendMode.Difference => PConstants.DIFFERENCE
         case BlendMode.Exclusion  => PConstants.EXCLUSION)
       blend = mode
+
+    protected def setTint(color: Option[Color]): Unit = currentTint = color
 
     protected def setStrokeColor(color: Color): Unit =
       graphics.stroke(
@@ -350,7 +353,7 @@ final class ProcessingProvider private (
       native(position.y)
       native(size.x)
       native(size.y)
-      val bitmap = source match
+      val original = source match
         case image: ProcessingImage => image.bitmap
         case _                      =>
           Option(imageCache.get(source)).getOrElse {
@@ -358,6 +361,31 @@ final class ProcessingProvider private (
             imageCache.put(source, uploaded)
             uploaded
           }
+      val bitmap = currentTint.fold(original) { color =>
+        val variants = Option(tintCache.get(source)).getOrElse(Vector.empty)
+        variants.find(_._1 == color).map(_._2).getOrElse {
+          val normalized = new BufferedImage(
+            original.getWidth,
+            original.getHeight,
+            BufferedImage.TYPE_INT_ARGB
+          )
+          val copy = normalized.createGraphics()
+          try
+            copy.setComposite(AlphaComposite.Src)
+            copy.drawImage(original, 0, 0, null)
+          finally copy.dispose()
+          val scales = Array(
+            color.red.toFloat,
+            color.green.toFloat,
+            color.blue.toFloat,
+            color.alpha.toFloat
+          )
+          val tinted = new RescaleOp(scales, Array.fill(4)(0.0f), null)
+            .filter(normalized, null)
+          tintCache.put(source, (variants :+ (color, tinted)).takeRight(4))
+          tinted
+        }
+      }
       val drawing = graphics
         .asInstanceOf[PGraphicsJava2D]
         .g2
@@ -466,6 +494,7 @@ final class ProcessingProvider private (
     if !closed then
       closed = true
       imageCache.clear()
+      tintCache.clear()
       Using.Manager { use =>
         val cleanup = new AutoCloseable:
           def close(): Unit = target match
