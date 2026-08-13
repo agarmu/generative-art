@@ -60,13 +60,18 @@ object ProcessingProvider:
       def stop(): Unit = host.requestStop()
       def isStopped: Boolean = host.isStopped
 
-final class ProcessingProvider(applet: PApplet) extends SketchProvider:
+final class ProcessingProvider private (
+    applet: PApplet,
+    target: Option[PGraphicsJava2D]
+) extends SketchProvider:
+  def this(applet: PApplet) = this(applet, None)
   private var closed = false
+  private val children = scala.collection.mutable.Set.empty[Surface]
   private val imageCache = new WeakHashMap[Image, BufferedImage]
   private var savedClips = List.empty[java.awt.Shape]
   private var renderThread = Option.empty[Thread]
 
-  private def graphics: PGraphics = applet.g
+  private def graphics: PGraphics = target.getOrElse(applet.g)
   private def context = graphics.asInstanceOf[PGraphicsJava2D].g2
 
   val canvas: Canvas = new Canvas:
@@ -100,6 +105,31 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
       finally drawing.dispose()
 
     protected def clearTransparent(): Unit = clearWith(None)
+
+    protected def createSurface(width: Int, height: Int): Surface =
+      val layer = applet
+        .createGraphics(width, height, PConstants.JAVA2D)
+        .asInstanceOf[PGraphicsJava2D]
+      val provider = new ProcessingProvider(applet, Some(layer))
+      try
+        layer.pixelDensity = 1
+        layer.setSize(width, height)
+        layer.beginDraw()
+        provider.initialize(60.0)
+        provider.canvas.clear()
+      catch
+        case error: Throwable =>
+          try provider.close()
+          catch case cleanup: Throwable => error.addSuppressed(cleanup)
+          throw error
+      val surface = new Surface:
+        val canvas: Canvas = provider.canvas
+        def isClosed: Boolean = provider.closed
+        def close(): Unit =
+          try provider.close()
+          finally children -= this
+      children += surface
+      surface
 
     protected def setStrokeColor(color: Color): Unit =
       graphics.stroke(
@@ -376,7 +406,7 @@ final class ProcessingProvider(applet: PApplet) extends SketchProvider:
     )
     val rate = native(frameRate)
     require(rate > 0.0f, "frameRate must be positive at native precision")
-    applet.frameRate(rate)
+    if target.isEmpty then applet.frameRate(rate)
     graphics.colorMode(PConstants.RGB, 1.0f)
     graphics.blendMode(PConstants.BLEND)
     graphics.rectMode(PConstants.CORNER)
