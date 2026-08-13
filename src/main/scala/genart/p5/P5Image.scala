@@ -91,17 +91,22 @@ object P5Image:
       drawing.getImageData(0.0, 0.0, width, height)
     )
 
-  private[p5] def upload(source: Image): dom.HTMLCanvasElement =
+  private[p5] def upload(
+      source: Image,
+      tint: Color = Color.rgb(1.0, 1.0, 1.0)
+  ): dom.HTMLCanvasElement =
     val canvas = surface(source.width, source.height)
     val drawing = context(canvas)
     val pixels = drawing.createImageData(source.width, source.height)
     for y <- 0 until source.height; x <- 0 until source.width do
       val color = source(x, y)
       val offset = (y * source.width + x) * 4
-      pixels.data(offset) = math.round(color.red * 255.0).toInt
-      pixels.data(offset + 1) = math.round(color.green * 255.0).toInt
-      pixels.data(offset + 2) = math.round(color.blue * 255.0).toInt
-      pixels.data(offset + 3) = math.round(color.alpha * 255.0).toInt
+      pixels.data(offset) = math.round(color.red * tint.red * 255.0).toInt
+      pixels.data(offset + 1) =
+        math.round(color.green * tint.green * 255.0).toInt
+      pixels.data(offset + 2) = math.round(color.blue * tint.blue * 255.0).toInt
+      pixels.data(offset + 3) =
+        math.round(color.alpha * tint.alpha * 255.0).toInt
     drawing.putImageData(pixels, 0.0, 0.0)
     canvas
 

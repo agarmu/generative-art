@@ -59,6 +59,7 @@ final class P5Provider private[p5] (
   private var fillGradient = Option.empty[Gradient]
   private var strokeGradient = Option.empty[Gradient]
   private var imageTint = Option.empty[Color]
+  private var tinted = new TintCache
   private var imageCache = new ImageCache
   private var fillEnabled = true
   private var strokeEnabled = true
@@ -125,6 +126,8 @@ final class P5Provider private[p5] (
         case BlendMode.Lighten    => "lighten"
         case BlendMode.Difference => "difference"
         case BlendMode.Exclusion  => "exclusion")
+
+    protected def setTint(color: Option[Color]): Unit = imageTint = color
 
     protected def setStrokeColor(color: Color): Unit =
       instance.stroke(color.red, color.green, color.blue, color.alpha)
@@ -284,14 +287,17 @@ final class P5Provider private[p5] (
         sourceSize: Vec[2]
     ): Unit =
       require(!closed, "provider is closed")
-      val surface = source match
-        case image: P5Image => image.surface
-        case _              =>
-          imageCache.get(source).getOrElse {
-            val uploaded = P5Image.upload(source)
-            imageCache.set(source, uploaded)
-            uploaded
-          }
+      val surface = imageTint match
+        case Some(color) => tinted.getOrCreate(source, color)
+        case None        =>
+          source match
+            case image: P5Image => image.surface
+            case _              =>
+              imageCache.get(source).getOrElse {
+                val uploaded = P5Image.upload(source)
+                imageCache.set(source, uploaded)
+                uploaded
+              }
       val drawing = instance.drawingContext
       drawing.save()
       try
@@ -382,6 +388,7 @@ final class P5Provider private[p5] (
       finally
         children.clear()
         imageCache = new ImageCache
+        tinted = new TintCache
 
 @js.native
 private[p5] trait NativeTextMetrics extends js.Object:
