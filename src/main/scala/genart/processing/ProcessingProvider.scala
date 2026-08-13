@@ -385,13 +385,13 @@ final class ProcessingProvider private (
       savedClips = clip :: savedClips
 
     protected def popState(): Unit =
-      try graphics.popStyle()
-      finally
-        try graphics.popMatrix()
+      val clip = savedClips.head
+      savedClips = savedClips.tail
+      if !closed then
+        try graphics.popStyle()
         finally
-          val clip = savedClips.head
-          savedClips = savedClips.tail
-          withDeviceCoordinates(_.setClip(clip))
+          try graphics.popMatrix()
+          finally withDeviceCoordinates(_.setClip(clip))
 
   def initialize(frameRate: Double): Unit =
     require(!closed, "provider is closed")
@@ -436,24 +436,41 @@ final class ProcessingProvider private (
     if !closed then
       closed = true
       imageCache.clear()
-      val surface = applet.getSurface
-      if surface != null then
-        applet.noLoop()
-        surface.setFrameRate(60.0f)
-        try applet.dispose()
-        finally
-          surface.getNative match
-            case component: Component =>
-              val releaseWindow: Runnable = () =>
-                renderThread.foreach(_.join())
-                EventQueue.invokeLater(() =>
-                  Option(SwingUtilities.getWindowAncestor(component))
-                    .foreach(_.dispose())
+      Using.Manager { use =>
+        val cleanup = new AutoCloseable:
+          def close(): Unit = target match
+            case Some(layer) =>
+              Using.Manager { own =>
+                own(
+                  new AutoCloseable:
+                    def close(): Unit = layer.dispose()
                 )
-              val teardown =
-                new Thread(releaseWindow, "genart-window-disposal")
-              teardown.start()
-            case _ => ()
+                layer.endDraw()
+              }.get
+            case None => closeWindow()
+        use(cleanup)
+        children.toList.foreach(use(_))
+      }.get
+
+  private def closeWindow(): Unit =
+    val surface = applet.getSurface
+    if surface != null then
+      applet.noLoop()
+      surface.setFrameRate(60.0f)
+      try applet.dispose()
+      finally
+        surface.getNative match
+          case component: Component =>
+            val releaseWindow: Runnable = () =>
+              renderThread.foreach(_.join())
+              EventQueue.invokeLater(() =>
+                Option(SwingUtilities.getWindowAncestor(component))
+                  .foreach(_.dispose())
+              )
+            val teardown =
+              new Thread(releaseWindow, "genart-window-disposal")
+            teardown.start()
+          case _ => ()
 
   private def native(value: Double): Float =
     val converted = value.toFloat
