@@ -167,6 +167,9 @@ class CanvasSuite extends munit.FunSuite:
     protected def clearTransparent(): Unit = fail("unexpected clear")
     protected def createSurface(width: Int, height: Int): Surface =
       fail("recording canvas has no renderer")
+    protected def setBlendMode(value: BlendMode): Unit = fail(
+      "unexpected blend"
+    )
     protected def setStrokeColor(color: Color): Unit = state =
       state.copy(stroke = Some(color))
     protected def setFillColor(color: Color): Unit = state =

@@ -68,6 +68,12 @@ final class ProcessingProvider private (
   private var closed = false
   private val children = scala.collection.mutable.Set.empty[Surface]
   private val imageCache = new WeakHashMap[Image, BufferedImage]
+  private var fillGradient = Option.empty[Gradient]
+  private var strokeGradient = Option.empty[Gradient]
+  private var currentTint = Option.empty[Color]
+  private var blend = BlendMode.Normal
+  private var savedStyles =
+    List.empty[(Option[Gradient], Option[Gradient], Option[Color], BlendMode)]
   private var savedClips = List.empty[java.awt.Shape]
   private var renderThread = Option.empty[Thread]
 
@@ -130,6 +136,18 @@ final class ProcessingProvider private (
           finally children -= this
       children += surface
       surface
+
+    protected def setBlendMode(mode: BlendMode): Unit =
+      graphics.blendMode(mode match
+        case BlendMode.Normal     => PConstants.BLEND
+        case BlendMode.Add        => PConstants.ADD
+        case BlendMode.Multiply   => PConstants.MULTIPLY
+        case BlendMode.Screen     => PConstants.SCREEN
+        case BlendMode.Darken     => PConstants.DARKEST
+        case BlendMode.Lighten    => PConstants.LIGHTEST
+        case BlendMode.Difference => PConstants.DIFFERENCE
+        case BlendMode.Exclusion  => PConstants.EXCLUSION)
+      blend = mode
 
     protected def setStrokeColor(color: Color): Unit =
       graphics.stroke(
@@ -383,15 +401,26 @@ final class ProcessingProvider private (
           graphics.popStyle()
           throw error
       savedClips = clip :: savedClips
+      savedStyles =
+        (fillGradient, strokeGradient, currentTint, blend) :: savedStyles
 
     protected def popState(): Unit =
       val clip = savedClips.head
       savedClips = savedClips.tail
+      val (fill, stroke, imageTint, blendMode) = savedStyles.head
+      savedStyles = savedStyles.tail
+      // A scoped body may close its own surface. Unwind Scala state without
+      // touching the disposed native context or masking the body's exception.
       if !closed then
         try graphics.popStyle()
         finally
           try graphics.popMatrix()
-          finally withDeviceCoordinates(_.setClip(clip))
+          finally
+            withDeviceCoordinates(_.setClip(clip))
+            fillGradient = fill
+            strokeGradient = stroke
+            currentTint = imageTint
+            setBlendMode(blendMode)
 
   def initialize(frameRate: Double): Unit =
     require(!closed, "provider is closed")
@@ -431,6 +460,7 @@ final class ProcessingProvider private (
     graphics.resetMatrix()
     graphics.background(0.0f, 0.0f, 0.0f)
     graphics.style(style)
+    canvas.blendMode(blend)
 
   def close(): Unit =
     if !closed then

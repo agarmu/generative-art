@@ -56,10 +56,15 @@ final class P5Provider private[p5] (
   private def instance: P5Drawing = target.getOrElse(host)
   private var closed = false
   private val children = scala.collection.mutable.Set.empty[Surface]
+  private var fillGradient = Option.empty[Gradient]
+  private var strokeGradient = Option.empty[Gradient]
+  private var imageTint = Option.empty[Color]
   private var imageCache = new ImageCache
   private var fillEnabled = true
   private var strokeEnabled = true
-  private var savedPaint = List.empty[(Boolean, Boolean)]
+  private var savedPaint = List.empty[
+    (Boolean, Boolean, Option[Gradient], Option[Gradient], Option[Color])
+  ]
 
   val canvas: Canvas = new Canvas:
     def width: Int =
@@ -109,6 +114,17 @@ final class P5Provider private[p5] (
         case failure: Throwable => Using.resource(surface)(_ => throw failure)
       children += surface
       surface
+
+    protected def setBlendMode(mode: BlendMode): Unit =
+      instance.blendMode(mode match
+        case BlendMode.Normal     => "source-over"
+        case BlendMode.Add        => "lighter"
+        case BlendMode.Multiply   => "multiply"
+        case BlendMode.Screen     => "screen"
+        case BlendMode.Darken     => "darken"
+        case BlendMode.Lighten    => "lighten"
+        case BlendMode.Difference => "difference"
+        case BlendMode.Exclusion  => "exclusion")
 
     protected def setStrokeColor(color: Color): Unit =
       instance.stroke(color.red, color.green, color.blue, color.alpha)
@@ -298,17 +314,25 @@ final class P5Provider private[p5] (
       instance.scale(factors.x, factors.y)
     protected def pushState(): Unit =
       instance.push()
-      savedPaint = (fillEnabled, strokeEnabled) :: savedPaint
+      savedPaint = (
+        fillEnabled,
+        strokeEnabled,
+        fillGradient,
+        strokeGradient,
+        imageTint
+      ) :: savedPaint
 
     protected def popState(): Unit =
-      try
-        if !closed then instance.pop()
+      try if !closed then instance.pop()
       finally
-        val (fill, stroke) = savedPaint.head
+        val (fill, stroke, fillPaint, strokePaint, savedTint) = savedPaint.head
         savedPaint = savedPaint.tail
         if !closed then
           fillEnabled = fill
           strokeEnabled = stroke
+          fillGradient = fillPaint
+          strokeGradient = strokePaint
+          imageTint = savedTint
 
   def initialize(frameRate: Double): Unit =
     require(!closed, "provider is closed")

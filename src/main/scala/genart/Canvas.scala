@@ -23,6 +23,12 @@ trait Canvas:
     ensureOpen()
     clearTransparent()
 
+  final def blendMode(value: BlendMode): Unit =
+    ensureOpen()
+    setBlendMode(value)
+
+  /** Multiplies image RGBA channels; other drawing operations are unaffected.
+    */
   final def stroke(color: Color): Unit =
     ensureOpen()
     setStrokeColor(color)
@@ -256,6 +262,7 @@ trait Canvas:
   protected def ensureOpen(): Unit = ()
   protected def clearTransparent(): Unit
   protected def createSurface(width: Int, height: Int): Surface
+  protected def setBlendMode(value: BlendMode): Unit
   protected def setStrokeColor(color: Color): Unit
   protected def setFillColor(color: Color): Unit
   protected def disableStroke(): Unit
