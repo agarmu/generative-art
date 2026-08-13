@@ -9,6 +9,16 @@ trait Canvas:
   def height: Int
   def snapshot(): Image
 
+  /** Creates a fixed-size transparent surface at one pixel per drawing unit.
+    * Closing the owner also closes every surface created from this canvas.
+    */
+  final def surface(width: Int, height: Int): Surface =
+    ensureOpen()
+    require(width > 0 && height > 0, "surface dimensions must be positive")
+    createSurface(width, height)
+
+  /** Clears to transparency, respecting clipping and ignoring transforms/blend.
+    */
   final def clear(): Unit =
     ensureOpen()
     clearTransparent()
@@ -245,6 +255,7 @@ trait Canvas:
 
   protected def ensureOpen(): Unit = ()
   protected def clearTransparent(): Unit
+  protected def createSurface(width: Int, height: Int): Surface
   protected def setStrokeColor(color: Color): Unit
   protected def setFillColor(color: Color): Unit
   protected def disableStroke(): Unit

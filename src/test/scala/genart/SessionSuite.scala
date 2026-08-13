@@ -326,6 +326,8 @@ private[genart] class TestProvider extends SketchProvider:
     def snapshot(): Image =
       throw new UnsupportedOperationException("test canvas has no renderer")
     protected def clearTransparent(): Unit = ()
+    protected def createSurface(width: Int, height: Int): Surface =
+      throw new UnsupportedOperationException("test canvas has no renderer")
     protected def setStrokeColor(color: Color): Unit = ()
     protected def setFillColor(color: Color): Unit = ()
     protected def disableStroke(): Unit = ()
