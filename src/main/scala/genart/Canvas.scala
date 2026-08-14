@@ -29,6 +29,14 @@ trait Canvas:
 
   /** Multiplies image RGBA channels; other drawing operations are unaffected.
     */
+  final def tint(color: Color): Unit =
+    ensureOpen()
+    setTint(Some(color))
+
+  final def noTint(): Unit =
+    ensureOpen()
+    setTint(None)
+
   final def stroke(color: Color): Unit =
     ensureOpen()
     setStrokeColor(color)
@@ -263,6 +271,7 @@ trait Canvas:
   protected def clearTransparent(): Unit
   protected def createSurface(width: Int, height: Int): Surface
   protected def setBlendMode(value: BlendMode): Unit
+  protected def setTint(color: Option[Color]): Unit
   protected def setStrokeColor(color: Color): Unit
   protected def setFillColor(color: Color): Unit
   protected def disableStroke(): Unit
