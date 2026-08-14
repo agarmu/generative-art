@@ -187,6 +187,25 @@ final class ProcessingProvider private (
           )
           new java.awt.RadialGradientPaint(origin, r, fractions, colors)
 
+    private def paintShape(shape: java.awt.Shape, fill: Boolean = true): Unit =
+      val paint = context.getPaint
+      try
+        if fill && graphics.fill then
+          context.setPaint(
+            fillGradient.fold[java.awt.Paint](
+              new java.awt.Color(graphics.fillColor, true)
+            )(nativePaint)
+          )
+          context.fill(shape)
+        if graphics.stroke then
+          context.setPaint(
+            strokeGradient.fold[java.awt.Paint](
+              new java.awt.Color(graphics.strokeColor, true)
+            )(nativePaint)
+          )
+          context.draw(shape)
+      finally context.setPaint(paint)
+
     protected def setStrokeColor(color: Color): Unit =
       graphics.stroke(
         color.red.toFloat,
@@ -274,16 +293,7 @@ final class ProcessingProvider private (
       val shape = layout(value, style).getOutline(
         AffineTransform.getTranslateInstance(position.x, position.y)
       )
-      val context = graphics.asInstanceOf[PGraphicsJava2D].g2
-      val paint = context.getPaint
-      try
-        if graphics.fill then
-          context.setColor(new java.awt.Color(graphics.fillColor, true))
-          context.fill(shape)
-        if graphics.stroke then
-          context.setColor(new java.awt.Color(graphics.strokeColor, true))
-          context.draw(shape)
-      finally context.setPaint(paint)
+      paintShape(shape)
 
     protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit =
       graphics.ellipse(
@@ -364,17 +374,7 @@ final class ProcessingProvider private (
       graphics.asInstanceOf[PGraphicsJava2D].g2.clip(shape(path, rule))
 
     protected def drawPath(path: Path, rule: FillRule): Unit =
-      val outline = shape(path, rule)
-      val context = graphics.asInstanceOf[PGraphicsJava2D].g2
-      val paint = context.getPaint
-      try
-        if graphics.fill then
-          context.setColor(new java.awt.Color(graphics.fillColor, true))
-          context.fill(outline)
-        if graphics.stroke then
-          context.setColor(new java.awt.Color(graphics.strokeColor, true))
-          context.draw(outline)
-      finally context.setPaint(paint)
+      paintShape(shape(path, rule))
 
     protected def drawImage(
         source: Image,
