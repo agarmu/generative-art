@@ -241,15 +241,25 @@ final class ProcessingProvider private (
 
     protected def clearSurface(color: Color): Unit = clearWith(Some(color))
     protected def drawRect(position: Vec[2], size: Vec[2]): Unit =
-      graphics.rect(
-        native(position.x),
-        native(position.y),
-        native(size.x),
-        native(size.y)
+      paintShape(
+        new Rectangle2D.Float(
+          native(position.x),
+          native(position.y),
+          native(size.x),
+          native(size.y)
+        )
       )
 
     protected def drawLine(from: Vec[2], to: Vec[2]): Unit =
-      graphics.line(native(from.x), native(from.y), native(to.x), native(to.y))
+      paintShape(
+        new Line2D.Float(
+          native(from.x),
+          native(from.y),
+          native(to.x),
+          native(to.y)
+        ),
+        fill = false
+      )
 
     private def layout(value: String, style: TextStyle): TextLayout =
       val family = style.family match
@@ -296,11 +306,17 @@ final class ProcessingProvider private (
       paintShape(shape)
 
     protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit =
-      graphics.ellipse(
-        native(center.x),
-        native(center.y),
-        native(size.x),
-        native(size.y)
+      native(center.x)
+      native(center.y)
+      native(size.x)
+      native(size.y)
+      paintShape(
+        new Ellipse2D.Double(
+          center.x - size.x / 2.0,
+          center.y - size.y / 2.0,
+          size.x,
+          size.y
+        )
       )
 
     protected def drawTriangle(a: Vec[2], b: Vec[2], c: Vec[2]): Unit =
