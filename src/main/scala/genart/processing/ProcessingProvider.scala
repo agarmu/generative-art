@@ -206,6 +206,17 @@ final class ProcessingProvider private (
           context.draw(shape)
       finally context.setPaint(paint)
 
+    private def polygon(points: Vec[2]*): Unit =
+      val outline = new Path2D.Double
+      points.zipWithIndex.foreach { (point, index) =>
+        native(point.x)
+        native(point.y)
+        if index == 0 then outline.moveTo(point.x, point.y)
+        else outline.lineTo(point.x, point.y)
+      }
+      outline.closePath()
+      paintShape(outline)
+
     protected def setStrokeColor(color: Color): Unit =
       graphics.stroke(
         color.red.toFloat,
@@ -320,26 +331,10 @@ final class ProcessingProvider private (
       )
 
     protected def drawTriangle(a: Vec[2], b: Vec[2], c: Vec[2]): Unit =
-      graphics.triangle(
-        native(a.x),
-        native(a.y),
-        native(b.x),
-        native(b.y),
-        native(c.x),
-        native(c.y)
-      )
+      polygon(a, b, c)
 
     protected def drawQuad(a: Vec[2], b: Vec[2], c: Vec[2], d: Vec[2]): Unit =
-      graphics.quad(
-        native(a.x),
-        native(a.y),
-        native(b.x),
-        native(b.y),
-        native(c.x),
-        native(c.y),
-        native(d.x),
-        native(d.y)
-      )
+      polygon(a, b, c, d)
 
     protected def translateBy(offset: Vec[2]): Unit =
       graphics.translate(native(offset.x), native(offset.y))
