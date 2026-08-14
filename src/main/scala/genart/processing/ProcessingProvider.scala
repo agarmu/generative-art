@@ -152,6 +152,41 @@ final class ProcessingProvider private (
 
     protected def setTint(color: Option[Color]): Unit = currentTint = color
 
+    private def nativePaint(gradient: Gradient): java.awt.Paint =
+      val stops = gradient.stops
+      val fractions = stops.map(stop => native(stop.offset)).toArray
+      require(
+        fractions.sliding(2).forall(pair => pair(0) < pair(1)),
+        "gradient offsets must remain distinct at native precision"
+      )
+      val colors = stops
+        .map(stop =>
+          new java.awt.Color(
+            stop.color.red.toFloat,
+            stop.color.green.toFloat,
+            stop.color.blue.toFloat,
+            stop.color.alpha.toFloat
+          )
+        )
+        .toArray
+      gradient match
+        case Gradient.Linear(from, to, _) =>
+          val start = new Point2D.Float(native(from.x), native(from.y))
+          val end = new Point2D.Float(native(to.x), native(to.y))
+          require(
+            start != end,
+            "gradient endpoints must differ at native precision"
+          )
+          new java.awt.LinearGradientPaint(start, end, fractions, colors)
+        case Gradient.Radial(center, radius, _) =>
+          val origin = new Point2D.Float(native(center.x), native(center.y))
+          val r = native(radius)
+          require(
+            r > 0.0f,
+            "gradient radius must be positive at native precision"
+          )
+          new java.awt.RadialGradientPaint(origin, r, fractions, colors)
+
     protected def setStrokeColor(color: Color): Unit =
       graphics.stroke(
         color.red.toFloat,
