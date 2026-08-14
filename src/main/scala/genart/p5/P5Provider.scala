@@ -129,6 +129,34 @@ final class P5Provider private[p5] (
 
     protected def setTint(color: Option[Color]): Unit = imageTint = color
 
+    private def nativeGradient(gradient: Gradient): dom.CanvasGradient =
+      val context = instance.drawingContext
+      val native = gradient match
+        case Gradient.Linear(from, to, _) =>
+          context.createLinearGradient(from.x, from.y, to.x, to.y)
+        case Gradient.Radial(center, radius, _) =>
+          context.createRadialGradient(
+            center.x,
+            center.y,
+            0,
+            center.x,
+            center.y,
+            radius
+          )
+      gradient.stops.foreach(stop =>
+        native.addColorStop(stop.offset, css(stop.color))
+      )
+      native
+
+    private def withPaint(draw: => Unit): Unit =
+      val context = instance.drawingContext
+      context.save()
+      try
+        fillGradient.foreach(g => context.fillStyle = nativeGradient(g))
+        strokeGradient.foreach(g => context.strokeStyle = nativeGradient(g))
+        draw
+      finally context.restore()
+
     protected def setStrokeColor(color: Color): Unit =
       instance.stroke(color.red, color.green, color.blue, color.alpha)
       strokeEnabled = true
@@ -169,10 +197,10 @@ final class P5Provider private[p5] (
       finally context.restore()
 
     protected def drawRect(position: Vec[2], size: Vec[2]): Unit =
-      instance.rect(position.x, position.y, size.x, size.y)
+      withPaint(instance.rect(position.x, position.y, size.x, size.y))
 
     protected def drawLine(from: Vec[2], to: Vec[2]): Unit =
-      instance.line(from.x, from.y, to.x, to.y)
+      withPaint(instance.line(from.x, from.y, to.x, to.y))
 
     private def font(style: TextStyle): String =
       val family = style.family match
@@ -210,7 +238,7 @@ final class P5Provider private[p5] (
         value: String,
         position: Vec[2],
         style: TextStyle
-    ): Unit =
+    ): Unit = withPaint {
       val context = instance.drawingContext
       context.save()
       try
@@ -220,15 +248,16 @@ final class P5Provider private[p5] (
         if fillEnabled then context.fillText(value, position.x, position.y)
         if strokeEnabled then context.strokeText(value, position.x, position.y)
       finally context.restore()
+    }
 
     protected def drawEllipse(center: Vec[2], size: Vec[2]): Unit =
-      instance.ellipse(center.x, center.y, size.x, size.y)
+      withPaint(instance.ellipse(center.x, center.y, size.x, size.y))
 
     protected def drawTriangle(a: Vec[2], b: Vec[2], c: Vec[2]): Unit =
-      instance.triangle(a.x, a.y, b.x, b.y, c.x, c.y)
+      withPaint(instance.triangle(a.x, a.y, b.x, b.y, c.x, c.y))
 
     protected def drawQuad(a: Vec[2], b: Vec[2], c: Vec[2], d: Vec[2]): Unit =
-      instance.quad(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y)
+      withPaint(instance.quad(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y))
 
     protected def translateBy(offset: Vec[2]): Unit =
       instance.translate(offset.x, offset.y)
@@ -271,10 +300,11 @@ final class P5Provider private[p5] (
       case FillRule.NonZero => dom.CanvasFillRule.nonzero
       case FillRule.EvenOdd => dom.CanvasFillRule.evenodd
 
-    protected def drawPath(path: Path, rule: FillRule): Unit =
+    protected def drawPath(path: Path, rule: FillRule): Unit = withPaint {
       val outline = shape(path)
       if fillEnabled then instance.drawingContext.fill(outline, winding(rule))
       if strokeEnabled then instance.drawingContext.stroke(outline)
+    }
 
     protected def intersectClip(path: Path, rule: FillRule): Unit =
       instance.drawingContext.clip(shape(path), winding(rule))
