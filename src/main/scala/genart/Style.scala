@@ -9,8 +9,8 @@ enum StrokeJoin:
   case Miter, Round, Bevel
 
 final case class Style(
-    stroke: Option[Color],
-    fill: Option[Color],
+    stroke: Option[Paint],
+    fill: Option[Paint],
     strokeWeight: Double,
     strokeCap: StrokeCap = StrokeCap.Round,
     strokeJoin: StrokeJoin = StrokeJoin.Miter

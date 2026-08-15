@@ -217,7 +217,18 @@ final class ProcessingProvider private (
       outline.closePath()
       paintShape(outline)
 
+    protected def setFillGradient(gradient: Gradient): Unit =
+      nativePaint(gradient)
+      graphics.fill = true
+      fillGradient = Some(gradient)
+
+    protected def setStrokeGradient(gradient: Gradient): Unit =
+      nativePaint(gradient)
+      graphics.stroke = true
+      strokeGradient = Some(gradient)
+
     protected def setStrokeColor(color: Color): Unit =
+      strokeGradient = None
       graphics.stroke(
         color.red.toFloat,
         color.green.toFloat,
@@ -226,6 +237,7 @@ final class ProcessingProvider private (
       )
 
     protected def setFillColor(color: Color): Unit =
+      fillGradient = None
       graphics.fill(
         color.red.toFloat,
         color.green.toFloat,

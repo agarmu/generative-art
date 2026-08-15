@@ -37,13 +37,17 @@ trait Canvas:
     ensureOpen()
     setTint(None)
 
-  final def stroke(color: Color): Unit =
+  final def stroke(paint: Paint): Unit =
     ensureOpen()
-    setStrokeColor(color)
+    paint match
+      case color: Color       => setStrokeColor(color)
+      case gradient: Gradient => setStrokeGradient(gradient)
 
-  final def fill(color: Color): Unit =
+  final def fill(paint: Paint): Unit =
     ensureOpen()
-    setFillColor(color)
+    paint match
+      case color: Color       => setFillColor(color)
+      case gradient: Gradient => setFillGradient(gradient)
 
   final def noStroke(): Unit =
     ensureOpen()
@@ -272,6 +276,8 @@ trait Canvas:
   protected def createSurface(width: Int, height: Int): Surface
   protected def setBlendMode(value: BlendMode): Unit
   protected def setTint(color: Option[Color]): Unit
+  protected def setFillGradient(value: Gradient): Unit
+  protected def setStrokeGradient(value: Gradient): Unit
   protected def setStrokeColor(color: Color): Unit
   protected def setFillColor(color: Color): Unit
   protected def disableStroke(): Unit

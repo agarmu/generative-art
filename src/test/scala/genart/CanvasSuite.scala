@@ -171,6 +171,12 @@ class CanvasSuite extends munit.FunSuite:
       "unexpected blend"
     )
     protected def setTint(color: Option[Color]): Unit = fail("unexpected tint")
+    protected def setFillGradient(value: Gradient): Unit = fail(
+      "unexpected gradient"
+    )
+    protected def setStrokeGradient(value: Gradient): Unit = fail(
+      "unexpected gradient"
+    )
     protected def setStrokeColor(color: Color): Unit = state =
       state.copy(stroke = Some(color))
     protected def setFillColor(color: Color): Unit = state =

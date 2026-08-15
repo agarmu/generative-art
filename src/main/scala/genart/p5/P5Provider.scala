@@ -157,11 +157,23 @@ final class P5Provider private[p5] (
         draw
       finally context.restore()
 
+    protected def setFillGradient(gradient: Gradient): Unit =
+      fillGradient = Some(gradient)
+      instance.fill(1, 1, 1, 1)
+      fillEnabled = true
+
+    protected def setStrokeGradient(gradient: Gradient): Unit =
+      strokeGradient = Some(gradient)
+      instance.stroke(0, 0, 0, 1)
+      strokeEnabled = true
+
     protected def setStrokeColor(color: Color): Unit =
+      strokeGradient = None
       instance.stroke(color.red, color.green, color.blue, color.alpha)
       strokeEnabled = true
 
     protected def setFillColor(color: Color): Unit =
+      fillGradient = None
       instance.fill(color.red, color.green, color.blue, color.alpha)
       fillEnabled = true
 

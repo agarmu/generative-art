@@ -330,6 +330,8 @@ private[genart] class TestProvider extends SketchProvider:
       throw new UnsupportedOperationException("test canvas has no renderer")
     protected def setBlendMode(value: BlendMode): Unit = ()
     protected def setTint(color: Option[Color]): Unit = ()
+    protected def setFillGradient(value: Gradient): Unit = ()
+    protected def setStrokeGradient(value: Gradient): Unit = ()
     protected def setStrokeColor(color: Color): Unit = ()
     protected def setFillColor(color: Color): Unit = ()
     protected def disableStroke(): Unit = ()
