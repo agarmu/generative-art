@@ -18,6 +18,7 @@ private[examples] object Examples:
     Example("Drag Shapes", "drag", DragShapes),
     Example("Images", "images", Images),
     Example("Layers", "layers", Layers),
+    Example("Gradients", "gradients", Gradients),
     Example("Tinting", "tinting", Tinting),
     Example("Paths", "paths", Paths),
     Example("Screen Saver", "screensaver", ScreenSaver),
