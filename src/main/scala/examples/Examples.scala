@@ -16,6 +16,7 @@ private[examples] object Examples:
     Example("Color Walk", "walk", ColorWalk),
     Example("Drag Shapes", "drag", DragShapes),
     Example("Images", "images", Images),
+    Example("Layers", "layers", Layers),
     Example("Paths", "paths", Paths),
     Example("Screen Saver", "screensaver", ScreenSaver),
     Example("Text", "text", Text),
