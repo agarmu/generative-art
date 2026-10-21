@@ -8,8 +8,8 @@ let
   processingSource =
     if pkgs.stdenv.hostPlatform.isDarwin then
       pkgs.fetchurl {
-        url = "https://github.com/processing/processing4/releases/download/processing-1434-4.5.6/processing-4.5.6-macos-aarch64-portable.zip";
-        sha256 = "sha256-rIJOvPJeJtS6bTCm/NutI6ZeX9o9Ug7ALpzd8pqKNlY=";
+        url = "https://github.com/processing/processing4/releases/download/processing-1435-4.5.7/processing-4.5.7-macos-aarch64-portable.zip";
+        sha256 = "5753aa93611217ef0b6d58b38ce11927cd20c38ce47b03724aee95977b837c59";
       }
     else
       pkgs.processing;

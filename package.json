@@ -11,6 +11,6 @@
     "build": "bun run link && bun build src/main/resources/web/index.html --outdir target/web --target browser --minify"
   },
   "dependencies": {
-    "p5": "2.3.2"
+    "p5": "2.3.4"
   }
 }
